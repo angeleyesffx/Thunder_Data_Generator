@@ -9,8 +9,6 @@ from datetime import datetime, timedelta
 from commons.stringManipulation import split_string_after, generate_random_number
 
 
-# countries ="ar, br, ca, co, do, ec, mx, pa, pe, py, us, za"
-
 
 class Config(object):
     def __init__(self, environment, flow, config_yaml, countries, services, methods, versions, execute):
@@ -29,7 +27,7 @@ def parse_args():
     parser.add_argument('-CONFIG_YAML', help='config yaml', dest='config_yaml')
     parser.add_argument('-ENV', help='environment', dest='environment')
     parser.add_argument('-COUNTRIES', help='countries', dest='countries')
-    parser.add_argument('-services', help='services', dest='services')
+    parser.add_argument('-SERVICES', help='services', dest='services')
     parser.add_argument('-METHODS', help='methods', dest='methods')
     parser.add_argument('-VERSIONS', help='versions', dest='versions')
     parser.add_argument('-FLOW', help='flow', dest='flow')
@@ -72,7 +70,7 @@ def select_the_environment(environment, config_yaml):
 
 def select_the_execution_flow(flow):
     if flow is not None:
-        config_flow_file = read_yml_file("config_flow")
+        config_flow_file = read_yml_file("flow")
         return config_flow_file
     else:
         return None
@@ -231,9 +229,9 @@ def get_zip_payload(country, service, method, version):
     return True
 
 
-def is_request_through_generic_relay(country, service, method):
-    request_through_generic_relay = get_config_from_method(country, service, method, "request_through_generic_relay")
-    return request_through_generic_relay
+def is_request_through_middleware_api(country, service, method):
+    request_through_middleware_api = get_config_from_method(country, service, method, "request_through_middleware_api")
+    return request_through_middleware_api
 
 
 def get_auth_payload(country, service, method):
@@ -250,17 +248,17 @@ def get_auth_token(country, service, method):
 
 
 def get_vendorId(country, service, method):
-    if is_request_through_generic_relay(country, service, method):
-        vendorId = str(get_config_from_country(country, "generic_relay_vendorId"))
-        return vendorId
+    if is_request_through_middleware_api(country, service, method):
+        Id = str(get_config_from_country(country, "middleware_api_Id"))
+        return Id
     else:
-        vendorId = str(get_config_from_method(country, service, method, "vendorId"))
-        return vendorId
+        Id = str(get_config_from_method(country, service, method, "Id"))
+        return Id
 
 
 def get_auth_type(country, service, method):
-    if is_request_through_generic_relay(country, service, method):
-        auth_type = str(get_config_from_country(country, "generic_relay_auth_type"))
+    if is_request_through_middleware_api(country, service, method):
+        auth_type = str(get_config_from_country(country, "middleware_api_auth_type"))
         return auth_type
     else:
         auth_type = str(get_config_from_method(country, service, method, "auth_type"))
@@ -268,8 +266,8 @@ def get_auth_type(country, service, method):
 
 
 def get_auth_method(country, service, method):
-    if is_request_through_generic_relay(country, service, method):
-        auth_method = str(get_config_from_country(country, "generic_relay_auth_method"))
+    if is_request_through_middleware_api(country, service, method):
+        auth_method = str(get_config_from_country(country, "middleware_api_auth_method"))
         return auth_method
     else:
         auth_method = str(get_config_from_method(country, service, method, "auth_method"))
@@ -277,8 +275,8 @@ def get_auth_method(country, service, method):
 
 
 def get_auth_url(country, service, method):
-    if is_request_through_generic_relay(country, service, method):
-        auth_url = str(get_config_from_country(country, "generic_relay_auth_url"))
+    if is_request_through_middleware_api(country, service, method):
+        auth_url = str(get_config_from_country(country, "middleware_api_auth_url"))
         return auth_url
     else:
         auth_url = str(get_config_from_method(country, service, method, "auth_url"))
@@ -286,8 +284,8 @@ def get_auth_url(country, service, method):
 
 
 def get_auth_scope(country, service, method):
-    if is_request_through_generic_relay(country, service, method):
-        auth_scope = str(get_config_from_country(country, "generic_relay_auth_scope"))
+    if is_request_through_middleware_api(country, service, method):
+        auth_scope = str(get_config_from_country(country, "middleware_api_auth_scope"))
         return auth_scope
     else:
         auth_scope = str(get_config_from_method(country, service, method, "auth_scope"))
@@ -295,8 +293,8 @@ def get_auth_scope(country, service, method):
 
 
 def get_auth_grant_type(country, service, method):
-    if is_request_through_generic_relay(country, service, method):
-        auth_grant_type = str(get_config_from_country(country, "generic_relay_auth_grant_type"))
+    if is_request_through_middleware_api(country, service, method):
+        auth_grant_type = str(get_config_from_country(country, "middleware_api_auth_grant_type"))
         return auth_grant_type
     else:
         auth_grant_type = str(get_config_from_method(country, service, method, "auth_grant_type"))
@@ -304,8 +302,8 @@ def get_auth_grant_type(country, service, method):
 
 
 def get_auth_client_id(country, service, method):
-    if is_request_through_generic_relay(country, service, method):
-        auth_client_id = str(get_config_from_country(country, "generic_relay_auth_client_id"))
+    if is_request_through_middleware_api(country, service, method):
+        auth_client_id = str(get_config_from_country(country, "middleware_api_auth_client_id"))
         return auth_client_id
     else:
         auth_client_id = str(get_config_from_method(country, service, method, "auth_client_id"))
@@ -313,8 +311,8 @@ def get_auth_client_id(country, service, method):
 
 
 def get_auth_client_secret(country, service, method):
-    if is_request_through_generic_relay(country, service, method):
-        auth_client_secret = str(get_config_from_country(country, "generic_relay_auth_client_secret"))
+    if is_request_through_middleware_api(country, service, method):
+        auth_client_secret = str(get_config_from_country(country, "middleware_api_auth_client_secret"))
         return auth_client_secret
     else:
         auth_client_secret = str(get_config_from_method(country, service, method, "auth_client_secret"))
@@ -322,11 +320,11 @@ def get_auth_client_secret(country, service, method):
 
 
 def get_url(country, service, method, version):
-    if is_request_through_generic_relay(country, service, method):
-        url = get_config_from_version(country, service, method, version, "url")
+    if is_request_through_middleware_api(country, service, method):
+        url = get_config_from_version(country, service, method, version, "middleware_api_url")
         return url
     else:
-        url = get_config_from_version(country, service, method, version, "value_stream_url")
+        url = get_config_from_version(country, service, method, version, "url")
         return url
 
 
