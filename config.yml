@@ -1,0 +1,60 @@
+test_env:
+  base_url: https://services-whatever.com
+  countries:
+    test:
+      middlewre_api_auth_type: Bearer
+      middlewre_api_auth_method: post
+      middlewre_api_auth_url: https://whatever/api/auth/token
+      middlewre_api_auth_grant_type: client_credentials
+      middlewre_api_auth_client_id: aaaaaa-xx33-1111
+      middlewre_api_auth_scope: openid
+      middlewre_api_auth_client_secret: yyyy1111-xxxxxxx-0000
+      middlewre_api_id: blalvlalbvlbla-1111
+      supported_languages: en
+      services:
+          create_accounts:
+              post:
+                request_through_middlewre_api: true
+                auth_url: none
+                auth_method: none
+                auth_grant_type: none
+                auth_client_id: none
+                auth_scope: none
+                auth_client_secret: none
+                get_data_id: true
+                versions:
+                  v1:
+                    middlewre_api_url: /api/whatever-service/v1
+                    url: /register
+                    amount_data_mass: 2
+                    encoding_type: utf-8
+                    id_prefix: UNIT_TEST
+                    param_keys: None
+                    csv_data_source: unit_test
+                    csv_strategy: all_in
+                    csv_scenario: 'valid data, invalid_data, empty_data'
+                    template_name: test_data
+                    multiple_request: false
+        register:
+          get:
+            request_through_middlewre_api: true
+            auth_url: none
+            auth_method: none
+            auth_grant_type: none
+            auth_client_id: none
+            auth_scope: none
+            auth_client_secret: none
+            get_data_id: false
+            versions:
+              v1:
+                middlewre_api_url: /api/whatever-service/v1
+                url: /register-service/userdata?language=${language}&userName=${userName}
+                amount_data_mass: 2
+                encoding_type: utf-8
+                id_prefix: UNIT_TEST
+                param_keys: "language:language,country:country, userName:id256"
+                csv_data_source: unit_test
+                csv_strategy: single_line
+                csv_scenario: none
+                template_name: test_data
+                multiple_request: true
