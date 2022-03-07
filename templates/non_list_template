@@ -1,0 +1,22 @@
+{
+  {% with key=dict_item %}
+  "country": "{{key.country}}",
+  "delivery_address": "{{key.address}}",
+  {% if key.product_list|length %}
+  "company_storage": [
+    {% set product_list = key.product_list.split(',') %}
+    {% set description_list = key.description_list.split(',') %}
+    {% set quantity_list = key.quantity_list.split(',') %}
+    {% for i in product_list %}
+        {% set product_id = product_list[loop.index-1] %}
+        {% set description = description_list[loop.index-1] %}
+        {% set quantity = quantity_list[loop.index-1] %}
+      {
+        "product_id": "{{product_id}}",
+        "description":{{description}}
+        "quantity": {{quantity}}
+      }{% if loop.last %}{% else %},  {% endif %}
+    {% endfor %}
+  ]
+  {% endif %}
+}{% endwith %}
