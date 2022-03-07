@@ -21,7 +21,7 @@ test_env:
                 auth_client_id: none
                 auth_scope: none
                 auth_client_secret: none
-                get_data_id: true
+                get_data_unique_id: true
                 versions:
                   v1:
                     middlewre_api_url: /api/whatever-service/v1
@@ -44,7 +44,7 @@ test_env:
             auth_client_id: none
             auth_scope: none
             auth_client_secret: none
-            get_data_id: false
+            get_data_unique_id: false
             versions:
               v1:
                 middlewre_api_url: /api/whatever-service/v1
