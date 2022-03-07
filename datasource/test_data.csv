@@ -1,0 +1,4 @@
+test_scenario_id,product_id,description,country,quantity,address
+valid_data_multiple,"001ID,002ID","CD_MUSIC,VIDEOGAMES","US,BR,JP,PY","100,20", random_generation
+invalid_data,"!!!!!","XXXX","123","0", random_generation
+empty data,,,,,,
