@@ -1,0 +1,87 @@
+{% macro optional_string_field(field_name, value, is_last) -%}
+  {% if value|length %}
+    "{{field_name}}" : "{{value}}"{% if not is_last %},{% endif %}
+  {% endif %}
+{%- endmacro %}
+
+{% macro optional_non_string_field(field_name, value, is_last) -%}
+  {% if value -%}
+    "{{field_name}}" : {{value}}{% if not is_last %},{% endif %}
+  {% endif %}
+{%- endmacro %}
+
+
+{% macro string_to_array(field_name, value, is_last) -%}
+  {%- if value|length %}
+    "{{field_name}}" : [
+          {% for v in value.split(",") -%}
+              "{{v.strip()}}" {% if loop.last %}{% else %},  {% endif %}
+        {%- endfor %}
+    ]{% if not is_last -%},{%- endif %}
+  {%- endif %}
+{%- endmacro %}
+
+{% macro string_to_object_array(field_name, object_fields, values) -%}
+  {% if object_fields|length and values|length %}
+    "{{field_name}}" : [
+      {% for k in object_fields %}
+         {% for v in values %}
+          {
+            "{{k}}" : {{v}}
+          }{% if loop.last %}{% else %}, {% endif %}
+          {% endfor %}
+      {% endfor %}
+    ]
+  {% endif %}
+{%- endmacro %}
+
+
+{% macro string_to_multiple_object_array(field_name, object_fields, values) -%}
+  {% if object_fields|length and values|length %}
+  {% set size = len(object_fields) %}
+    "{{field_name}}" : [
+      {
+        {% for k in range(size) %}
+          {% if values[k]|length %}
+            "{{object_fields[k]}}" : "{{values[k]}}"{% if loop.last %}{% else %}, {% endif %}
+          {% endif %}
+      {% endfor %}
+      }
+    ]
+  {% endif %}
+{%- endmacro %}
+
+
+{% macro fill_object(field_name, object_fields) -%}
+    {% if object_fields|length %}
+      "{{field_name}}" : {
+        {% for k,v in object_fields.items() %}
+            {% if v|length %}
+              "{{k}}" : "{{v}}"{% if loop.last %}{% else %},{% endif %}
+             {% endif %}
+        {% endfor %}
+      }
+    {% endif %}
+{%- endmacro %}
+
+{% macro multiple_object_array(field_name, object_fields) -%}
+  {% if object_fields|length %}
+    "{{field_name}}" : [
+      {
+         {% for k,v in object_fields.items() %}
+            {% if v|length %}
+              "{{k}}" : "{{v}}"{% if loop.last %}{% else %},{% endif %}
+            {% endif %}
+         {% endfor %}
+      }
+    ]
+  {% endif %}
+{%- endmacro %}
+
+{% macro string_field(field_name, value, is_last) -%}
+  {% if value|length %}
+    "{{field_name}}" : "{{value}}"{% if not is_last %},{% endif %}
+  {% else %}
+    "{{field_name}}" : ""{% if not is_last %},{% endif %}
+  {% endif %}
+{%- endmacro %}
