@@ -52,7 +52,7 @@ test_env:
                 amount_data_mass: 2
                 encoding_type: utf-8
                 id_prefix: UNIT_TEST
-                param_keys: "language:language,country:country, userName:id256"
+                param_keys: "language:language, userName:id256"
                 csv_data_source: unit_test
                 csv_strategy: single_line
                 csv_scenario: none
