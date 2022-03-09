@@ -247,7 +247,7 @@ def get_auth_token(country, service, method):
     return str(get_config_from_method(country, service, method, "auth_token"))
 
 
-def get_vendorId(country, service, method):
+def get_userId(country, service, method):
     if is_request_through_middleware_api(country, service, method):
         Id = str(get_config_from_country(country, "middleware_api_Id"))
         return Id
