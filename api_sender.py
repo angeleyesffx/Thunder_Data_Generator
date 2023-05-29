@@ -112,7 +112,7 @@ if __name__ == '__main__':
             data_flow = generate_data_flow(execution_list)
         else:
             data_flow = None
-        thunder_exec(execution_list, data_flow)
+        api_sender_exec(execution_list, data_flow)
         for report in report_list:
             print(report)
     except (KeyboardInterrupt, EOFError):
