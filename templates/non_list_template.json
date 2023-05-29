@@ -2,7 +2,13 @@
   {% with key=dict_item %}
   "country": "{{key.country}}",
   "delivery_address": "{{key.address}}",
-  {% if key.product_list|length %}
+   {% if dict.contact_type0|length or dict.contact_value0|length %} ------>>>>>New Version of Group key
+      "contacts": [
+          {% set key_list = ['contact_type','contact_value'] %}
+          {{utils.group_by_keys(dict,key_list,"contact_")}}
+      ],
+  {% endif %}
+  {% if key.product_list|length %} ------>>>>>Old Version of Group key
   "company_storage": [
     {% set product_list = key.product_list.split(',') %}
     {% set description_list = key.description_list.split(',') %}
@@ -15,7 +21,7 @@
         "product_id": "{{product_id}}",
         "description":{{description}}
         "quantity": {{quantity}}
-      }{% if loop.last %}{% else %},  {% endif %}
+      }{% if loop.last %}{% else %},  {% endif %}  
     {% endfor %}
   ]
   {% endif %}
