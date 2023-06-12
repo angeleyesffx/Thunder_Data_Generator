@@ -7,18 +7,18 @@
       #----------------------------------------------------------------------------------------------------------------#
       #---             If you are using middleware fill this authentication and authorization block                 ---#
       #---             otherwise you can delete it from your config file                                            ---#
-      middleware_auth_type: [insert_the_auth_type_Bearer_or_Basic]
-      middleware_auth_method: [insert_the_request_auth_method]
-      middleware_auth_url: [insert_the_auth_token_url]
-      middleware_auth_grant_type: client_credentials
-      middleware_auth_client_id: [insert_the_client_id]
-      middleware_auth_scope: [insert_the_auth_scope]
-      middleware_auth_client_secret: [insert_the_client_secret_generate]
+      middleware_api_auth_type: [insert_the_auth_type_Bearer_or_Basic]
+      middleware_api_auth_method: [insert_the_request_auth_method]
+      middleware_api_auth_url: [insert_the_auth_token_url]
+      middleware_api_auth_grant_type: client_credentials
+      middleware_api_auth_client_id: [insert_the_client_id]
+      middleware_api_auth_scope: [insert_the_auth_scope]
+      middleware_api_auth_client_secret: [insert_the_client_secret_generate]
       #-----------------------------  End of BEES SYNC authentication and authorization block  ------------------------#
       service:
         [insert_your_service_name]:
           [insert_your_base_url]:
-            request_through_middleware: [if_you_are_using_middleware_insert_value_as_true_otherwise_false]
+            request_through_middleware_api: [if_you_are_using_middleware_insert_value_as_true_otherwise_false]
             #----------------------------------------------------------------------------------------------------------#
             #---                                    ANY API AUTH SESSION                                            ---#
             #----------------------------------------------------------------------------------------------------------#
@@ -40,9 +40,9 @@
             versions:
               [insert_your_api_version]:
                 #---         Only use the field url if you are using middleware service                              ---#
-                url: [insert_middleware_api_url]
+                middleware_api_url: [insert_middleware_api_url]
                 #---         Only use the field value_stream_url if you are using any other service                 ---#
-                value_stream_url: [insert_api_url]
+                url: [insert_api_url]
                 encoding_type: utf-8
                 id_prefix: [insert_create_a_unique_identification_to_your_execution]
                 #------------------------------------------------------------------------------------------------------#
