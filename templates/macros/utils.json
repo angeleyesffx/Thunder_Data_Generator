@@ -1,0 +1,139 @@
+{% macro optional_string_field(field_name, value, is_last) -%}
+    {% if value|length %}
+      "{{field_name}}" : "{{value}}"{% if not is_last %},{% endif %}
+    {% endif %}
+{%- endmacro %}
+
+{% macro optional_non_string_field(field_name, value, is_last) -%}
+    {% if value -%}
+      "{{field_name}}" : {{value}}{% if not is_last %},{% endif %}
+    {% endif %}
+{%- endmacro %}
+
+{% macro not_required_fields(dictionary) -%}
+    {% set ns = namespace(aux = "") %}
+    {% set ns = namespace(aux_comma = "") %}
+    {% for key,value in dictionary.items() %}
+        {% if (value|string)|length %}
+            {% if (ns.aux_comma|string)|length and (value|string)|length %}
+               ,
+            {% endif %}
+            {% if value == 'true' or  value == 'false' or  value == 'null' or value is number %}
+                "{{key}}" : {{value}}
+            {% else %}
+                "{{key}}" : "{{value}}"
+            {% endif %}
+            {% set ns.aux_comma = value %}
+       {% endif %}
+    {% endfor %}
+{%- endmacro %}
+
+{% macro is_need_an_extra_comma(dictionary) -%}
+    {% set ns = namespace(aux_comma = "") %}
+    {% for key, value in dictionary.items() %}
+        {% if (value|string)|length %}
+            {% set ns.aux_comma = value %}
+        {% endif %}
+        {% if (ns.aux_comma|string)|length > 0 and loop.last %}
+            ,
+        {% endif %}
+    {% endfor %}
+{%- endmacro %}
+
+{% macro group_by_keys(dictionary,keys_name,rm_preffix_from_keys) -%}
+    {% set new_dictionary = {} %}
+    {% set list_of_dicts = [] %}
+    {% set ns = namespace(count = 0) %}
+    {% for key, value in dictionary.items() if key.startswith(keys_name[0]) %}
+       {% set ns.count = ns.count + 1 %}
+    {% endfor %}
+    {% for i in range(ns.count) %}
+        {% set new_dictionary = {} %}
+        {% for item in keys_name %}
+            {% set k = (item|string)+(i|string) %}
+            {% for key,value in dictionary.items() %}
+                {% if k == (key|string) %}
+                    {% if value|length %}
+                       {% set _= new_dictionary.__setitem__(item, value) %}
+                    {% endif %}
+               {% endif %}
+            {% endfor %}
+        {% endfor %}
+        {% if new_dictionary|length %}
+            {{ list_of_dicts.append(new_dictionary) or "" }}
+        {% endif %}
+   {% endfor %}
+   {% for object in list_of_dicts %}
+       {
+       {% for key,value in object.items() %}
+          {% if value == 'true' or  value == 'false' or value is number %}
+              "{{key.replace(rm_preffix_from_keys, "")}}" : {{value}}
+          {% else %}
+              "{{key.replace(rm_preffix_from_keys, "")}}" : "{{value}}"
+          {% endif %}
+          {% if loop.last %}{% else %}, {% endif %}
+        {% endfor %}
+       }{% if loop.last %}{% else %}, {% endif %}
+   {% endfor %}
+{%- endmacro %}
+
+
+{% macro string_to_array(dictionary) -%}
+    {% for key,value in dictionary.items() %}
+        {%- if value|length %}
+            "{{key}}" : [
+                  {% for v in value.split(",") -%}
+                      "{{v.strip()}}" {% if loop.last %}{% else %},  {% endif %}
+                  {%- endfor %}
+            ]
+        {%- endif %}
+   {% endfor %}
+{%- endmacro %}
+
+
+{% macro get_substring_after_chars(string_list, new_string_list, delim_chars) -%}
+     {% for str in string_list %}
+         {% set new_string = str.replace(delim_chars, "") %}
+         {{ new_string_list.append(new_string) or "" }}
+     {% endfor %}
+    "{{new_string_list}}",
+{%- endmacro %}
+
+
+{% macro create_list_of_dicts(dictionary,new_dictionary,keys_name,rm_preffix_from_keys) -%}
+    {% set list_of_dicts = [] %}
+    {% set ns = namespace(count = 0) %}
+    {% for key, value in dictionary.items() if key.startswith(keys_name[0]) %}
+       {% set ns.count = ns.count + 1 %}
+    {% endfor %}
+    {% for i in range(ns.count) %}
+        {% set new_dictionary = {} %}
+        {% for item in keys_name %}
+            {% set k = (item|string)+(i|string) %}
+            {% for key,value in dictionary.items() %}
+                {% if k == (key|string) %}
+                    {% if value|length %}
+                       {% set _= new_dictionary.__setitem__(item, value) %}
+                    {% endif %}
+               {% endif %}
+            {% endfor %}
+        {% endfor %}
+        {% if new_dictionary|length %}
+            {{ list_of_dicts.append(new_dictionary) or "" }}
+        {% endif %}
+   {% endfor %}
+{%- endmacro %}
+
+{% macro string_to_object_array(field_name, object_fields, values) -%}
+    {% if object_fields|length and values|length %}
+        "{{field_name}}" : [
+            {% for k in object_fields %}
+               {% for v in values %}
+                {
+                  "{{k}}" : {{v}}
+                }{% if loop.last %}{% else %}, {% endif %}
+                {% endfor %}
+            {% endfor %}
+        ]
+    {% endif %}
+{%- endmacro %}
