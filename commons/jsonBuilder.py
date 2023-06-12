@@ -1,4 +1,7 @@
 import json
+import os
+import datetime
+from commons.utils import create_folder
 
 
 # ---------------------------------------------------------------------------------------------------------------------#
@@ -22,6 +25,15 @@ def load_json_as_dict(json_file_path):
         return json_data
 
 
+def read_scenario_from_json(scenario, key, json_file_path):
+    json_file = json_file_path
+    with open(json_file, 'r') as file:
+        json_data = json.load(file)
+        if json_data.get(scenario).get(key):
+            return json_data.get(scenario).get(key)
+        return None
+
+
 def get_json_keys(json_file_path):
     json_file = load_json_as_dict(json_file_path)
     return json_file.keys()
@@ -32,9 +44,17 @@ def get_json_values(json_file_path):
     return json_file.values()
 
 
-def write_json_file(json_string):
-    new_json = json.dumps(json_string, sort_keys=True)
-    open("new_json.json", "w").write(new_json)
+def write_json_file(json_object, request_name):
+    folder_path = os.path.join(os.getcwd(), "json_generated")
+    date_time = str(datetime.date.today())
+    create_folder(folder_path)
+    create_folder(folder_path + "/" + date_time)
+    file_path = os.path.join(os.getcwd(), folder_path + "/" + date_time, request_name + ".json")
+
+    with open(file_path, "w") as outfile:
+            json.dump(json_object, outfile, indent=4)
+
+
 
 
 def find_key_and_replace_value_json(obj, key, value):
@@ -54,6 +74,14 @@ def find_key_and_replace_value_json(obj, key, value):
             item = find_key_and_replace_value_json(v, key, value)
             if item is not None:
                 return json.dumps(obj, indent=2, sort_keys=True)
+
+
+def add_if_key_not_exist(dict_obj, key, value):
+    """ Add new key-value pair to dictionary only if
+    key does not exist in dictionary. """
+    result = dict()
+    if key not in dict_obj:
+        result.update({key: value})
 
 
 def convert_to_dict(data):
