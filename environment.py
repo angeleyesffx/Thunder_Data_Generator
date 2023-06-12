@@ -101,51 +101,50 @@ def get_countries():
         return countries
 
 
-def get_entities(country):
-    # Get a list of Entities
-    entities_list = config.entities
-    if entities_list is None and config.flow is None:
-        entities = set()
-        entities.update(config.environment.get("countries").get(country).get("entities"))
-        return sorted(entities)
-    elif entities_list is None and config.flow is not None:
-        print(config.flow)
+def get_services(country):
+    # Get a list of services
+    services_list = config.services
+    if services_list is None and config.flow is None:
+        services = set()
+        services.update(config.environment.get("countries").get(country).get("services"))
+        return sorted(services)
+    elif services_list is None and config.flow is not None:
         execution_flow = list(config.flow.get("execution_flows").get(args.flow).items())
         check_for_error_ir_order(execution_flow)
         list(config.flow).sort(key=lambda e: e[1]['execution_order'] if 'execution_order' in e[1] else 0)
         return [value[0] for value in execution_flow]
     else:
-        entities = entities_list.split(",")
-        return entities
+        services = services_list.split(",")
+        return services
 
 
-def get_methods(country, entity):
+def get_methods(country, service):
     # Get a list of Methods
     methods_list = config.methods
     if methods_list is None and config.flow is None:
         methods = set()
-        methods.update(config.environment.get("countries").get(country).get("entities").get(entity))
+        methods.update(config.environment.get("countries").get(country).get("services").get(service))
         return sorted(methods)
     elif methods_list is None and config.flow is not None:
-        entity_methods = config.flow.get("execution_flows").get(args.flow).get(entity).copy()
-        entity_methods.pop('execution_order')
-        return sorted(entity_methods.keys())
+        service_methods = config.flow.get("execution_flows").get(args.flow).get(service).copy()
+        service_methods.pop('execution_order')
+        return sorted(service_methods.keys())
     else:
         methods = methods_list.split(",")
         return methods
 
 
-def get_versions(country, entity, method):
+def get_versions(country, service, method):
     # Get a list of Versions
     versions_list = config.versions
     if versions_list is None and config.flow is None:
         versions = set()
         versions.update(
-            config.environment.get("countries").get(country).get("entities").get(entity).get(method).get("versions"))
+            config.environment.get("countries").get(country).get("services").get(service).get(method).get("versions"))
         return sorted(versions)
     elif versions_list is None and config.flow is not None:
         versions = set()
-        versions.update(config.flow.get("execution_flows").get(args.flow).get(entity).get(method))
+        versions.update(config.flow.get("execution_flows").get(args.flow).get(service).get(method))
         return sorted(versions)
     else:
         versions = versions_list.split(",")
@@ -166,18 +165,18 @@ def get_config_from_country(country, key):
     return config_country
 
 
-def get_config_from_entity(country, entity, key):
-    config_entity = config.environment.get("countries").get(country).get("entities").get(entity).get(key)
-    return config_entity
+def get_config_from_service(country, service, key):
+    config_service = config.environment.get("countries").get(country).get("services").get(service).get(key)
+    return config_service
 
 
-def get_config_from_method(country, entity, method, key):
-    config_method = config.environment.get("countries").get(country).get("entities").get(entity).get(method).get(key)
+def get_config_from_method(country, service, method, key):
+    config_method = config.environment.get("countries").get(country).get("services").get(service).get(method).get(key)
     return config_method
 
 
-def get_config_from_version(country, entity, method, version, key):
-    config_version = config.environment.get("countries").get(country).get("entities").get(entity).get(method).get(
+def get_config_from_version(country, service, method, version, key):
+    config_version = config.environment.get("countries").get(country).get("services").get(service).get(method).get(
         "versions").get(
         version).get(key)
     return config_version
@@ -190,19 +189,19 @@ def check_if_config_country_exist(country):
         return False
 
 
-def check_if_config_entity_exist(country, entity):
-    return config.environment.get("countries").get(country).get("entities").get(entity) is not None
+def check_if_config_service_exist(country, service):
+    return config.environment.get("countries").get(country).get("services").get(service) is not None
 
 
-def check_if_config_method_exist(country, entity, method):
-    if config.environment.get("countries").get(country).get("entities").get(entity).get(method):
+def check_if_config_method_exist(country, service, method):
+    if config.environment.get("countries").get(country).get("services").get(service).get(method):
         return True
     else:
         return False
 
 
-def check_if_config_version_exist(country, entity, method, version):
-    if config.environment.get("countries").get(country).get("entities").get(entity).get(method).get(
+def check_if_config_version_exist(country, service, method, version):
+    if config.environment.get("countries").get(country).get("services").get(service).get(method).get(
             "versions").get(version):
         return True
     else:
@@ -216,112 +215,112 @@ def get_timezone(country):
     return "America/Louisville"
 
 
-def get_base_url(country, entity, method, version):
-    url = str(get_environment_basic_config("base_url")) + str(get_url(country, entity, method, version))
+def get_base_url(country, service, method, version):
+    url = str(get_environment_basic_config("base_url")) + str(get_url(country, service, method, version))
     return url
 
 
-def get_zip_payload(country, entity, method, version):
-    zip_payload = get_config_from_version(country, entity, method, version, 'zip_payload')
+def get_zip_payload(country, service, method, version):
+    zip_payload = get_config_from_version(country, service, method, version, 'zip_payload')
     return zip_payload
 
 
-def is_request_through_middleware(country, entity, method):
-    request_through_middleware = get_config_from_method(country, entity, method, "request_through_middleware")
-    return request_through_middleware
+def is_request_through_middleware_api(country, service, method):
+    request_through_middleware_api = get_config_from_method(country, service, method, "request_through_middleware_api")
+    return request_through_middleware_api
 
 
-def get_auth_payload(country, entity, method):
+def get_auth_payload(country, service, method):
     payload = "grant_type=" + str(
-        get_auth_grant_type(country, entity, method)) + "&client_id=" + str(
-        get_auth_client_id(country, entity, method)) + "&scope=" + str(
-        get_auth_scope(country, entity, method)) + "&client_secret=" + str(
-        get_auth_client_secret(country, entity, method)) + ""
+        get_auth_grant_type(country, service, method)) + "&client_id=" + str(
+        get_auth_client_id(country, service, method)) + "&scope=" + str(
+        get_auth_scope(country, service, method)) + "&client_secret=" + str(
+        get_auth_client_secret(country, service, method)) + ""
     return payload
 
 
-def get_auth_token(country, entity, method):
-    return str(get_config_from_method(country, entity, method, "auth_token"))
+def get_auth_token(country, service, method):
+    return str(get_config_from_method(country, service, method, "auth_token"))
 
 
-def get_unique_id(country, entity, method):
-    if is_request_through_middleware(country, entity, method):
+def get_unique_id(country, service, method):
+    if is_request_through_middleware_api(country, service, method):
         uniqueId = str(get_config_from_country(country, "unique_id"))
         return uniqueId
     else:
-        uniqueId = str(get_config_from_method(country, entity, method, "auth_unique_id"))
+        uniqueId = str(get_config_from_method(country, service, method, "auth_unique_id"))
         return uniqueId
 
 
-def get_auth_type(country, entity, method):
-    if is_request_through_middleware(country, entity, method):
-        auth_type = str(get_config_from_country(country, "generic_relay_auth_type"))
+def get_auth_type(country, service, method):
+    if is_request_through_middleware_api(country, service, method):
+        auth_type = str(get_config_from_country(country, "middleware_api_auth_type"))
         return auth_type
     else:
-        auth_type = str(get_config_from_method(country, entity, method, "auth_type"))
+        auth_type = str(get_config_from_method(country, service, method, "auth_type"))
         return auth_type
 
 
-def get_auth_method(country, entity, method):
-    if is_request_through_middleware(country, entity, method):
-        auth_method = str(get_config_from_country(country, "generic_relay_auth_method"))
+def get_auth_method(country, service, method):
+    if is_request_through_middleware_api(country, service, method):
+        auth_method = str(get_config_from_country(country, "middleware_api_auth_method"))
         return auth_method
     else:
-        auth_method = str(get_config_from_method(country, entity, method, "auth_method"))
+        auth_method = str(get_config_from_method(country, service, method, "auth_method"))
         return auth_method
 
 
-def get_auth_url(country, entity, method):
-    if is_request_through_middleware(country, entity, method):
-        auth_url = str(get_config_from_country(country, "generic_relay_auth_url"))
+def get_auth_url(country, service, method):
+    if is_request_through_middleware_api(country, service, method):
+        auth_url = str(get_config_from_country(country, "middleware_api_auth_url"))
         return auth_url
     else:
-        auth_url = str(get_config_from_method(country, entity, method, "auth_url"))
+        auth_url = str(get_config_from_method(country, service, method, "auth_url"))
         return auth_url
 
 
-def get_auth_scope(country, entity, method):
-    if is_request_through_middleware(country, entity, method):
-        auth_scope = str(get_config_from_country(country, "generic_relay_auth_scope"))
+def get_auth_scope(country, service, method):
+    if is_request_through_middleware_api(country, service, method):
+        auth_scope = str(get_config_from_country(country, "middleware_api_auth_scope"))
         return auth_scope
     else:
-        auth_scope = str(get_config_from_method(country, entity, method, "auth_scope"))
+        auth_scope = str(get_config_from_method(country, service, method, "auth_scope"))
         return auth_scope
 
 
-def get_auth_grant_type(country, entity, method):
-    if is_request_through_middleware(country, entity, method):
-        auth_grant_type = str(get_config_from_country(country, "generic_relay_auth_grant_type"))
+def get_auth_grant_type(country, service, method):
+    if is_request_through_middleware_api(country, service, method):
+        auth_grant_type = str(get_config_from_country(country, "middleware_api_auth_grant_type"))
         return auth_grant_type
     else:
-        auth_grant_type = str(get_config_from_method(country, entity, method, "auth_grant_type"))
+        auth_grant_type = str(get_config_from_method(country, service, method, "auth_grant_type"))
         return auth_grant_type
 
 
-def get_auth_client_id(country, entity, method):
-    if is_request_through_middleware(country, entity, method):
-        auth_client_id = str(get_config_from_country(country, "generic_relay_auth_client_id"))
+def get_auth_client_id(country, service, method):
+    if is_request_through_middleware_api(country, service, method):
+        auth_client_id = str(get_config_from_country(country, "middleware_api_auth_client_id"))
         return auth_client_id
     else:
-        auth_client_id = str(get_config_from_method(country, entity, method, "auth_client_id"))
+        auth_client_id = str(get_config_from_method(country, service, method, "auth_client_id"))
         return auth_client_id
 
 
-def get_auth_client_secret(country, entity, method):
-    if is_request_through_middleware(country, entity, method):
-        auth_client_secret = str(get_config_from_country(country, "generic_relay_auth_client_secret"))
+def get_auth_client_secret(country, service, method):
+    if is_request_through_middleware_api(country, service, method):
+        auth_client_secret = str(get_config_from_country(country, "middleware_api_auth_client_secret"))
         return auth_client_secret
     else:
-        auth_client_secret = str(get_config_from_method(country, entity, method, "auth_client_secret"))
+        auth_client_secret = str(get_config_from_method(country, service, method, "auth_client_secret"))
         return auth_client_secret
 
 
-def get_url(country, entity, method, version):
-    if is_request_through_middleware(country, entity, method):
-        url = get_config_from_version(country, entity, method, version, "url")
+def get_url(country, service, method, version):
+    if is_request_through_middleware_api(country, service, method):
+        url = get_config_from_version(country, service, method, version, "middleware_api_url")
         return url
     else:
-        url = get_config_from_version(country, entity, method, version, "value_stream_url")
+        url = get_config_from_version(country, service, method, version, "url")
         return url
 
 
@@ -332,8 +331,8 @@ def get_supported_languages(country):
     return language
 
 
-def get_id_prefix(country, entity, method, version):
-    id_prefix = get_config_from_version(country, entity, method, version, "id_prefix")
+def get_id_prefix(country, service, method, version):
+    id_prefix = get_config_from_version(country, service, method, version, "id_prefix")
     return id_prefix
 
 
@@ -361,15 +360,15 @@ def define_country_fake_data(country):
     return selected_fake_data
 
 
-def get_param_keys(country, entity, method, version):
-    param_keys = get_config_from_version(country, entity, method, version, "param_keys")
+def get_param_keys(country, service, method, version):
+    param_keys = get_config_from_version(country, service, method, version, "param_keys")
     if param_keys is not None:
         params = param_keys.replace(" ", "")
         return params
 
 
-def create_param_dict(country, entity, method, version):
-    params = get_param_keys(country, entity, method, version)
+def create_param_dict(country, service, method, version):
+    params = get_param_keys(country, service, method, version)
     # using strip() and split()  methods
     if params != 'None' and params != 'none' and params != '' and params is not None:
         result = dict((key.strip(), value.strip())
@@ -378,12 +377,12 @@ def create_param_dict(country, entity, method, version):
         return result
 
 
-def get_data_param_keys(country, entity, method, version):
+def get_data_param_keys(country, service, method, version):
     language = define_country_fake_data(country)
-    static_params = create_static_params_dict(country, entity, method, version)
-    param_dict = create_param_dict(country, entity, method, version)
-    prefix = get_id_prefix(country, entity, method,
-                           version) + "-" + entity.upper() + "-" + method.upper() + "-" + version.upper() + "-"
+    static_params = create_static_params_dict(country, service, method, version)
+    param_dict = create_param_dict(country, service, method, version)
+    prefix = get_id_prefix(country, service, method,
+                           version) + "-" + service.upper() + "-" + method.upper() + "-" + version.upper() + "-"
     data = None
     if static_params is not None:
         for key, value in static_params.items():
@@ -393,15 +392,15 @@ def get_data_param_keys(country, entity, method, version):
     return data
 
 
-def get_static_params(country, entity, method, version):
-    static_params = get_config_from_version(country, entity, method, version, "static_params")
+def get_static_params(country, service, method, version):
+    static_params = get_config_from_version(country, service, method, version, "static_params")
     if static_params is not None:
         params = static_params.replace(" ", "")
         return params
 
 
-def create_static_params_dict(country, entity, method, version):
-    params = get_static_params(country, entity, method, version)
+def create_static_params_dict(country, service, method, version):
+    params = get_static_params(country, service, method, version)
     # using strip() and split()  methods
     if params != 'None' and params != 'none' and params != '' and params is not None:
         result = dict((key.strip(), value.strip())
@@ -410,34 +409,34 @@ def create_static_params_dict(country, entity, method, version):
         return result
 
 
-def get_encoding_type(country, entity, method, version):
-    encoding_type = get_config_from_version(country, entity, method, version, "encoding_type")
+def get_encoding_type(country, service, method, version):
+    encoding_type = get_config_from_version(country, service, method, version, "encoding_type")
     return encoding_type
 
 
-def get_template_name(country, entity, method, version):
-    template_name = get_config_from_version(country, entity, method, version, "template_name")
+def get_template_name(country, service, method, version):
+    template_name = get_config_from_version(country, service, method, version, "template_name")
     return template_name
 
 
-def get_data_source(country, entity, method, version):
-    data_name = get_config_from_version(country, entity, method, version, "csv_data_source")
+def get_data_source(country, service, method, version):
+    data_name = get_config_from_version(country, service, method, version, "csv_data_source")
     return data_name
 
 
-def get_csv_strategy(country, entity, method, version):
-    csv_strategy = get_config_from_version(country, entity, method, version, "csv_strategy")
+def get_csv_strategy(country, service, method, version):
+    csv_strategy = get_config_from_version(country, service, method, version, "csv_strategy")
     return csv_strategy
 
 
-def get_csv_scenario(country, entity, method, version):
-    csv_scenario = get_config_from_version(country, entity, method, version, "csv_scenario")
+def get_csv_scenario(country, service, method, version):
+    csv_scenario = get_config_from_version(country, service, method, version, "csv_scenario")
     if not csv_scenario:
         return None
     scenarios_list = csv_scenario.replace(' ', '').split(",")
     return scenarios_list
 
 
-def get_amount_data_mass(country, entity, method, version):
-    amount_data_mass = get_config_from_version(country, entity, method, version, "amount_data_mass")
+def get_amount_data_mass(country, service, method, version):
+    amount_data_mass = get_config_from_version(country, service, method, version, "amount_data_mass")
     return amount_data_mass
