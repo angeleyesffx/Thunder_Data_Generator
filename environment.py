@@ -9,12 +9,12 @@ from commons.utils import random_data_generator
 
 
 class Config(object):
-    def __init__(self, environment, flow, config_yaml, countries, entities, methods, versions, execute):
+    def __init__(self, environment, flow, config_yaml, countries, services, methods, versions, execute):
         self.environment = environment
         self.flow = flow
         self.config_yaml = config_yaml
         self.countries = countries
-        self.entities = entities
+        self.services = services
         self.methods = methods
         self.versions = versions
         self.execute = execute
@@ -25,7 +25,7 @@ def parse_args():
     parser.add_argument('-CONFIG_YAML', help='config yaml', dest='config_yaml')
     parser.add_argument('-ENV', help='environment', dest='environment')
     parser.add_argument('-COUNTRIES', help='countries', dest='countries')
-    parser.add_argument('-ENTITIES', help='entities', dest='entities')
+    parser.add_argument('-SERVICES', help='services', dest='services')
     parser.add_argument('-METHODS', help='methods', dest='methods')
     parser.add_argument('-VERSIONS', help='versions', dest='versions')
     parser.add_argument('-FLOW', help='flow', dest='flow')
