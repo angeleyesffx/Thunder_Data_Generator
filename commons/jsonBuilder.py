@@ -3,7 +3,6 @@ import os
 import datetime
 from commons.utils import create_folder
 
-
 # ---------------------------------------------------------------------------------------------------------------------#
 #                    Functions to manipulate JSON files information and responses                                      #
 # ---------------------------------------------------------------------------------------------------------------------#
@@ -52,9 +51,24 @@ def write_json_file(json_object, request_name):
     file_path = os.path.join(os.getcwd(), folder_path + "/" + date_time, request_name + ".json")
 
     with open(file_path, "w") as outfile:
-            json.dump(json_object, outfile, indent=4)
+            json.dump(json_object.replace('"[', '[').replace(']"', ']').replace(
+            '"{ ', '{').replace('}"', '}').replace(' ', '').replace('\n', '').replace('\"','"'), outfile,  indent=1, ensure_ascii=False)
 
 
+def beautify_json(json_template_name, json_string):
+    try:
+        return json.dumps(json.loads(json_string), indent=4, ensure_ascii=False).encode('utf8')
+    except json.decoder.JSONDecodeError as err:  # includes simplejson.decoder.JSONDecodeError
+        body = json_string.replace('"[', '[').replace(']"', ']').replace(
+            '"{ ', '{').replace('}"', '}').replace(' ', '').replace('\n', '')
+        error_message = "JSON error decoding file: '{0}'".format(err)
+        message = "Check if the template " + json_template_name + " is malformed. " \
+                                                                  "Check the body request, fix your template file" \
+                                                                  " and try again." \
+                                                                  "\nError Message: " + error_message + \
+                  "\nBODY REQUEST: " + body
+
+        raise Exception(message)
 
 
 def find_key_and_replace_value_json(obj, key, value):
@@ -137,3 +151,4 @@ def edit_template_json(json_file_path, args_data):
             new_json = edit_json(json_data, args)
             new_json.append(json.dumps(new_json_data, sort_keys=True))
     return new_json
+
