@@ -1,29 +1,38 @@
-{% macro nested_payload(keys_name, body) %}
+{% macro create_nested_body(keys_name, body) %}
 [
 {% for dictionary in dict_list -%}
     {% set new_dictionary = {} %}
     {% set list_of_dicts = [] %}
-    {% set ns = namespace(count = 0) %}
-    {% for key, value in dictionary.items() if key.startswith(keys_name[0]) %}
-       {% set ns.count = ns.count + 1 %}
-    {% endfor %}
-    {% for i in range(ns.count) %}
-        {% set new_dictionary = {} %}
-        {% for item in keys_name %}
-            {% set k = (item|string)+(i|string) %}
-            {% for key,value in dictionary.items() %}
-                {% if k == (key|string) %}
-                    {% if value|length %}
-                       {% set _= new_dictionary.__setitem__(item, value) %}
-                    {% endif %}
-               {% endif %}
-            {% endfor %}
+    {% set new_dictionary = {} %}
+    {% for item in keys_name %}
+        {% for key,value in dictionary.items() %}
+            {% if key.startswith(item)%}
+                {% if value|length %}
+                   {% set _= new_dictionary.__setitem__(key, value) %}
+                {% endif %}
+           {% endif %}
         {% endfor %}
-        {% if new_dictionary|length %}
-            {{ list_of_dicts.append(new_dictionary) or "" }}
-        {% endif %}
-    {% include body %}
     {% endfor %}
-{% endfor %}
+    {% if new_dictionary|length %}
+        {{ list_of_dicts.append(new_dictionary) or "" }}
+    {% endif %}
+    {% include body %}
+{% if loop.last %}{% else %}, {% endif %}{% endfor %}
 ]
+{%- endmacro %}
+
+{% macro create_body(keys_name, body) %}
+    {% set dictionary = dict_list.pop(0) %}
+    {% set new_dictionary = {} %}
+    {% set new_dictionary = {} %}
+    {% for item in keys_name %}
+        {% for key,value in dictionary.items() %}
+            {% if key.startswith(item)%}
+                {% if value|length %}
+                   {% set _= new_dictionary.__setitem__(key, value) %}
+                {% endif %}
+           {% endif %}
+        {% endfor %}
+    {% endfor %}
+    {% include body %}
 {%- endmacro %}
