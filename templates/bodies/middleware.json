@@ -1,0 +1,5 @@
+{
+  "service": "{{service}}",
+  "version": "{{version}}",
+  "payload": {{payload}}
+}
