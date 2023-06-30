@@ -101,7 +101,7 @@ def zip_payload(payload: str) -> bytes:
     return file.getvalue()
 
 
-def send_request(request_name, method, url, headers, payload, data, multiple_request=False, request_through_generic_relay=False,
+def send_request(request_name, method, url, headers, payload, data, multiple_request=False, request_through_middleware_api=False,
                  zip_payload_needed=None):
     if multiple_request and type(payload) is list:
         payload = [zip_payload(body) if zip_payload_needed else body for body in payload]
@@ -112,7 +112,7 @@ def send_request(request_name, method, url, headers, payload, data, multiple_req
         print_request_and_exit(request_name, method, url, headers, payload, zip_payload_needed)
     else:
         response = select_request(request_name, method, url, data, payload, headers, multiple_request)
-        evaluate_response(payload, response, request_name, multiple_request, request_through_generic_relay)
+        evaluate_response(payload, response, request_name, multiple_request, request_through_middleware_api)
         return response
 
 
@@ -177,12 +177,12 @@ def get_multiple_requests(method, url, data, headers, payload, request_name):
     return response
 
 
-def evaluate_response(payload, responses, request_name, multiple_request=False, request_through_generic_relay=False):
+def evaluate_response(payload, responses, request_name, multiple_request=False, request_through_middleware_api=False):
     if type(responses) == list:
         for idx, response in enumerate(responses):
-            print_result(payload[idx], response, request_name, multiple_request, request_through_generic_relay)
+            print_result(payload[idx], response, request_name, multiple_request, request_through_middleware_api)
     else:
-        print_result(payload, responses, request_name, multiple_request, request_through_generic_relay)
+        print_result(payload, responses, request_name, multiple_request, request_through_middleware_api)
     return payload
 
 def print_request_and_exit(request_name, method, url, headers, body_request, zip_payload_needed):
@@ -219,7 +219,7 @@ def print_request_and_exit(request_name, method, url, headers, body_request, zip
             count = count + 1
 
 
-def print_result(payload, response, request_name, multiple_request, request_through_generic_relay):
+def print_result(payload, response, request_name, multiple_request, request_through_middleware_api):
     print("\n")
     params = dict()
     if response.status_code == 400:
@@ -320,7 +320,7 @@ def print_result(payload, response, request_name, multiple_request, request_thro
             print("REQUEST: ", ''.join(payload.decode("utf-8").split()).replace('\n', '').replace(' ', ''))
         print("\n")
         params['requestTraceId'] = response.request.headers.get('requestTraceId')
-        write_responses_in_csv(payload, request_name, params, multiple_request, request_through_generic_relay)
+        write_responses_in_csv(payload, request_name, params, multiple_request, request_through_middleware_api)
         print("Check the report with the requestTraceId in request_results folder")
     else:
         data = response
