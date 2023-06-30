@@ -30,7 +30,7 @@ def normalize(payload, expand_all=False):
     return df
 
 
-def write_responses_in_csv(response, request_name, param_keys, multiple_request, request_through_generic_relay):
+def write_responses_in_csv(response, request_name, param_keys, multiple_request, request_through_middleware_api):
     tmp_list = list()
     # Define the folder path and current date
     folder_path = os.path.join(os.getcwd(), "csv_generated")
@@ -42,7 +42,7 @@ def write_responses_in_csv(response, request_name, param_keys, multiple_request,
     file_path = os.path.join(os.getcwd(), folder_path + "/" + date_time, f"output_data-{request_name}.csv")
     if not multiple_request:
         delete_file(file_path)
-    if request_through_generic_relay:
+    if request_through_middleware_api:
         if type(response) is list:
             for payload in response:
                 generic_response = json.loads(payload)
