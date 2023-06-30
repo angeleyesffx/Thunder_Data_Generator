@@ -1,17 +1,3 @@
-import sys
-import pandas as pd
-from commons.jsonDataBuilder import read_scenario_from_json
-from commons.requestBuilder import send_request
-from commons.utils import random_data_generator
-from environment import args, get_services, get_countries, get_methods, get_versions, get_template_name, \
-    get_data_source, get_csv_scenario, check_if_config_country_exist, check_if_config_service_exist, \
-    check_if_config_method_exist, check_if_config_version_exist, define_country_fake_data, get_id_prefix
-
-
-def generate_data_flow(execution_flow):
-    flow_list = list()
-    final_random_data = dict()
-    new_flow = dict()import sys
 import uuid
 import pandas as pd
 from commons.jsonDataBuilder import read_scenario_from_json
