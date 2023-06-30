@@ -25,7 +25,7 @@ def parse_args():
     parser.add_argument('-CONFIG_YAML', help='config yaml', dest='config_yaml')
     parser.add_argument('-ENV', help='environment', dest='environment')
     parser.add_argument('-COUNTRIES', help='countries', dest='countries')
-    parser.add_argument('-SERVICES', help='services', dest='services')
+    parser.add_argument('-services', help='services', dest='services')
     parser.add_argument('-METHODS', help='methods', dest='methods')
     parser.add_argument('-VERSIONS', help='versions', dest='versions')
     parser.add_argument('-FLOW', help='flow', dest='flow')
@@ -75,7 +75,7 @@ def select_the_execution_flow(flow):
 
 
 config = Config(select_the_environment(args.environment, args.config_yaml), select_the_execution_flow(args.flow),
-                select_the_config_file(args.config_yaml), args.countries, args.entities, args.methods, args.versions,
+                select_the_config_file(args.config_yaml), args.countries, args.services, args.methods, args.versions,
                 args.execute)
 
 
@@ -231,25 +231,46 @@ def is_request_through_middleware_api(country, service, method):
 
 
 def get_auth_payload(country, service, method):
-    payload = "grant_type=" + str(
-        get_auth_grant_type(country, service, method)) + "&client_id=" + str(
-        get_auth_client_id(country, service, method)) + "&scope=" + str(
-        get_auth_scope(country, service, method)) + "&client_secret=" + str(
-        get_auth_client_secret(country, service, method)) + ""
+    auth_token_type = get_auth_token_type(country, service, method)
+    if str(auth_token_type).upper == "B2B":
+        payload = "grant_type=" + str(
+            get_auth_grant_type(country, service, method)) + "&client_id=" + str(
+            get_auth_client_id(country, service, method)) + "&scope=" + str(
+            get_auth_scope(country, service, method)) + "&client_secret=" + str(
+            get_auth_client_secret(country, service, method)) + ""
+    else:
+            payload = "grant_type=" + str(
+            get_auth_grant_type(country, service, method)) + "&client_id=" + str(
+            get_auth_client_id(country, service, method)) + "&scope=" + str(
+            get_auth_scope(country, service, method)) + "&client_secret=" + str(
+            get_auth_client_secret(country, service, method)) + "&username=" + str(
+            get_auth_username(country, service, method)) + "&password=" + str(
+            get_auth_password(country, service, method)) + "&response_type=" + str(
+            get_auth_response_type(country, service, method)) + ""
     return payload
 
 
 def get_auth_token(country, service, method):
-    return str(get_config_from_method(country, service, method, "auth_token"))
-
-
-def get_unique_id(country, service, method):
     if is_request_through_middleware_api(country, service, method):
-        uniqueId = str(get_config_from_country(country, "unique_id"))
-        return uniqueId
+        return str(get_config_from_country(country, "middleware_api_auth_token"))
     else:
-        uniqueId = str(get_config_from_method(country, service, method, "auth_unique_id"))
-        return uniqueId
+        return str(get_config_from_method(country, service, method, "auth_token"))
+
+
+def get_auth_token_type(country, service, method):
+    if is_request_through_middleware_api(country, service, method):
+        return str(get_config_from_country(country, "middleware_api_auth_token_type"))
+    else:
+        return str(get_config_from_method(country, service, method, "auth_token_type"))
+
+
+def get_vendor_id(country, service, method):
+    if is_request_through_middleware_api(country, service, method):
+        vendorId = str(get_config_from_country(country, "middleware_api_vendor_id"))
+        return vendorId
+    else:
+        vendorId = str(get_config_from_method(country, service, method, "auth_vendor_id"))
+        return vendorId
 
 
 def get_auth_type(country, service, method):
@@ -315,12 +336,39 @@ def get_auth_client_secret(country, service, method):
         return auth_client_secret
 
 
+def get_auth_username(country, service, method):
+    if is_request_through_middleware_api(country, service, method):
+        auth_username = str(get_config_from_country(country, "middleware_api_auth_username"))
+        return auth_username
+    else:
+        auth_username = str(get_config_from_method(country, service, method, "auth_username"))
+        return auth_username
+
+
+def get_auth_password(country, service, method):
+    if is_request_through_middleware_api(country, service, method):
+        auth_password = str(get_config_from_country(country, "middleware_api_auth_password"))
+        return auth_password
+    else:
+        auth_password = str(get_config_from_method(country, service, method, "auth_password"))
+        return auth_password
+
+
+def get_auth_response_type(country, service, method):
+    if is_request_through_middleware_api(country, service, method):
+        auth_response_type = str(get_config_from_country(country, "middleware_api_auth_response_type"))
+        return auth_response_type
+    else:
+        auth_response_type = str(get_config_from_method(country, service, method, "auth_response_type"))
+        return auth_response_type
+
+
 def get_url(country, service, method, version):
     if is_request_through_middleware_api(country, service, method):
-        url = get_config_from_version(country, service, method, version, "middleware_api_url")
+        url = get_config_from_version(country, service, method, version, "url")
         return url
     else:
-        url = get_config_from_version(country, service, method, version, "url")
+        url = get_config_from_version(country, service, method, version, "value_stream_url")
         return url
 
 
@@ -367,8 +415,23 @@ def get_param_keys(country, service, method, version):
         return params
 
 
-def create_param_dict(country, service, method, version):
-    params = get_param_keys(country, service, method, version)
+def get_static_params(country, service, method, version):
+    static_params = get_config_from_version(country, service, method, version, "static_params")
+    if static_params is not None:
+        params = static_params.replace(" ", "")
+        return params
+
+
+def create_static_params_dict(static_params):
+    # using strip() and split()  methods
+    if static_params != 'None' and static_params != 'none' and static_params != '' and static_params is not None:
+        result = dict((key.strip(), value.strip())
+                      for key, value in (element.split('=')
+                                         for element in static_params.split(',')))
+        return result
+
+
+def create_param_dict(params):
     # using strip() and split()  methods
     if params != 'None' and params != 'none' and params != '' and params is not None:
         result = dict((key.strip(), value.strip())
@@ -377,36 +440,17 @@ def create_param_dict(country, service, method, version):
         return result
 
 
-def get_data_param_keys(country, service, method, version):
+def get_data_param_keys(country, params, static_params=None, prefix=None):
     language = define_country_fake_data(country)
-    static_params = create_static_params_dict(country, service, method, version)
-    param_dict = create_param_dict(country, service, method, version)
-    prefix = get_id_prefix(country, service, method,
-                           version) + "-" + service.upper() + "-" + method.upper() + "-" + version.upper() + "-"
+    new_static_params = create_static_params_dict(static_params)
+    param_dict = create_param_dict(params)
     data = None
     if static_params is not None:
-        for key, value in static_params.items():
+        for key, value in new_static_params.items():
             param_dict[key] = value
     if param_dict is not None:
         data = random_data_generator(param_dict, language, prefix)
     return data
-
-
-def get_static_params(country, service, method, version):
-    static_params = get_config_from_version(country, service, method, version, "static_params")
-    if static_params is not None:
-        params = static_params.replace(" ", "")
-        return params
-
-
-def create_static_params_dict(country, service, method, version):
-    params = get_static_params(country, service, method, version)
-    # using strip() and split()  methods
-    if params != 'None' and params != 'none' and params != '' and params is not None:
-        result = dict((key.strip(), value.strip())
-                      for key, value in (element.split('=')
-                                         for element in params.split(',')))
-        return result
 
 
 def get_encoding_type(country, service, method, version):
