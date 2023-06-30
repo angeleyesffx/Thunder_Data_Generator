@@ -1,4 +1,4 @@
 {% import 'macros/base_template.json' as base with context %}
-{% set keys_name = ["sku","vendor_item_id","base_price","price_id","quantity"] %}
-{% set body ="bodies/prices_put_v1.json" %}
+{% set keys_name = ["country","delivery_address","contact_type","contact_value","product_id","description","quantity"] %}
+{% set body ="bodies/non_nested_template.json" %}
 {{ base.create_body(keys_name, body) }}
