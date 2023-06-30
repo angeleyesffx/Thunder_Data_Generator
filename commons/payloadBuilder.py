@@ -3,7 +3,7 @@ import json
 import jinja2
 from commons.csvDataBuilder import select_csv_strategy
 from commons.stringManipulation import split_string_after
-from environment import get_vendor_id, get_data_param_keys, get_execute_flag
+from environment import get_execute_flag, get_data_param_keys
 
 
 # ---------------------------------------------------------------------------------------------------------------------#
@@ -13,36 +13,42 @@ from environment import get_vendor_id, get_data_param_keys, get_execute_flag
 # ----------------------------------------- Payload Builder Functions -------------------------------------------------#
 
 
-def create_middleware_api_payload_body(json_template_name, edited_json, country, service, method, version):
+def create_generic_relay_payload_body(json_template_name, edited_json, service, version):
     if not get_execute_flag():
         payload = get_beautified_payload(json_template_name, edited_json).decode('utf8')
     else:
         payload = str(json.dumps(edited_json.replace('\n', '')))
-    template = get_template_from_folder(os.path.join(os.getcwd(), "bodies"), "middleware_api.json")
-    iserid = str(get_userId(country, service, method))
+    template = get_template_from_folder(os.path.join(os.getcwd(), "templates/bodies"), "generic_relay.json")
     payload_data = {
-        "storage": true
-        "country": country,
-        "service": service,
-        "userId": userid,
+        "service": service.upper(),
         "version": version,
         "payload": payload
     }
     return template.render(payload_data)
 
 
-def create_middleware_api_payload(json_template_name, data, multiple_request, country, service, method, version):
+def create_generic_relay_payload(json_template_name, data, multiple_request, service, version):
     edited_json = template_editor(json_template_name, data, multiple_request)
     if multiple_request:
-        return [create_middleware_apiy_payload_body(json_template_name, data, country, service, method, version) for data
+        return [create_generic_relay_payload_body(json_template_name, data, service, version) for data
                 in edited_json]
-    return create_middleware_api_payload_body(json_template_name, edited_json, country, service, method, version)
+    return create_generic_relay_payload_body(json_template_name, edited_json, service, version)
 
 
-def create_payload(json_template_name, data, multiple_request):
-    edited_json = template_editor(json_template_name, data, multiple_request)
-    body = get_beautified_payload(json_template_name, edited_json)
+def create_standard_payload(template_name, data, multiple_request):
+    edited_json = template_editor(template_name, data, multiple_request)
+    body = get_beautified_payload(template_name, edited_json)
     return body
+
+
+def create_payload(template_name, data, service, method, version, multiple_request=False, request_through_generic_relay=False):
+    if request_through_generic_relay:
+        payload = create_generic_relay_payload(template_name, data, multiple_request, service, version)
+    elif not request_through_generic_relay and method == "get":
+        payload = data
+    else:
+        payload = create_standard_payload(template_name, data, multiple_request)
+    return payload
 
 
 def get_template_from_folder(folder_path, template_name):
@@ -64,14 +70,19 @@ def template_editor(json_template_name, data, multiple_request):
         return data
 
 
-def data_and_header_creation(data_source, data_flow, scenario, country, service, method, version, amount_data_mass):
+def data_and_header_creation(strategy=None, data_source=None, country=None,  prefix=None,  scenario=None, data_flow=None, param_keys=None, static_params=None, amount_data_mass=None):
     data = []
     header = []
     count = 1
+    if data_source is None and data_flow is None and param_keys is None:
+        raise ValueError(f""" 
+            Something goes wrong. Check in your yaml configuration!
+            data_source and data_flow and param_keys can't be None at the same time
+        """)
     if not data_source or data_source == 'None' or data_source == 'none':
         while count <= amount_data_mass:
             # Convert to dict
-            param_keys = get_data_param_keys(country, service, method, version)
+            param_keys = get_data_param_keys(country, param_keys, static_params, prefix)
             if param_keys != 'None' and param_keys != 'none' and param_keys != '' and param_keys is not None:
                 header.append({key: value for key, value in param_keys.items() if key.startswith('header_')})
                 data.append({key: value for key, value in param_keys.items() if not key.startswith('header_')})
@@ -86,7 +97,7 @@ def data_and_header_creation(data_source, data_flow, scenario, country, service,
             count = count + 1
         return data, header
     else:
-        csv_data = select_csv_strategy(data_source, scenario, country, service, method, version)
+        csv_data = select_csv_strategy(country, data_source, strategy, scenario, param_keys, static_params, prefix)
         for index, item in enumerate(csv_data):
             # Convert to dict
             csv_line = eval(csv_data[index])
@@ -101,10 +112,15 @@ def get_beautified_payload(json_template_name, payload):
     if type(payload) is not list:
         body = payload.replace('\n', '').replace('"[', '[').replace(']"', ']').replace(
             '"{ ', '{').replace('}"', '}')
+        if type(payload) is dict:
+            body = json.dumps(payload)
         return beautify_json(json_template_name, body)
     else:
         for body in payload:
-            body_list.append(beautify_json(json_template_name, body))
+            if type(body) is dict:
+                body_list.append(beautify_json(json_template_name, json.dumps(body)))
+            else:
+                body_list.append(beautify_json(json_template_name, body))
         return body_list
 
 
@@ -122,4 +138,3 @@ def beautify_json(json_template_name, json_string):
                   "\nBODY REQUEST: " + body
 
         raise Exception(message)
-
