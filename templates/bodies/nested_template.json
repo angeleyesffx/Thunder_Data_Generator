@@ -1,0 +1,23 @@
+{% import 'macros/utils.json' as utils with context %}
+
+{% for dict in list_of_dicts -%}
+    {
+        "country": "{{dict.country}}",
+        "accountId": "{{dict.account_id}}",
+        "customerAccountId": "{{dict.account_id}}",
+        {% set delivery_ids={"delivery_ids": dict.delivery_ids} %}
+        {{utils.string_to_array(delivery_ids)}}
+        {{utils.is_need_an_extra_comma(delivery_ids)}}
+        {% set channel={"status": dict.status} %}
+        {{utils.not_required_fields(status)}}
+        {{utils.is_need_an_extra_comma(status)}}
+        {% if dict.customer_name0|length or dict.customer_phone0|length or dict.customer_email0|length %}
+        "customer": [
+            {% set key_list = ['customer_name','customer_phone',customer_email] %}
+            {{utils.group_by_keys(dict,key_list,"customer_")}}
+        ],
+        {% endif %}
+        "status": "{{dict.status}}"
+}
+{% endfor %}
+
