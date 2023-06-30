@@ -3,28 +3,31 @@
   countries:
     [insert_your_country]:
       #----------------------------------------------------------------------------------------------------------------#
-      #---                                      MIDDLEWARE AUTH SESSION                                             ---#
+      #---                                      MIDDLEWARE AUTH SESSION                                              ---#
       #----------------------------------------------------------------------------------------------------------------#
-      #---             If you are using middleware fill this authentication and authorization block                 ---#
+      #---             If you are using MIDDLEWARE fill this authentication and authorization block                  ---#
       #---             otherwise you can delete it from your config file                                            ---#
       middleware_api_auth_type: [insert_the_auth_type_Bearer_or_Basic]
+      middleware_api_auth_token: [insert_the_auth_token_param_from_response_that_you_want_use]
       middleware_api_auth_method: [insert_the_request_auth_method]
       middleware_api_auth_url: [insert_the_auth_token_url]
       middleware_api_auth_grant_type: client_credentials
-      middleware_api_auth_client_id: [insert_the_client_id]
+      middleware_api_auth_client_id: [insert_the_client_id_generate_on_pipeline]
       middleware_api_auth_scope: [insert_the_auth_scope]
-      middleware_api_auth_client_secret: [insert_the_client_secret_generate]
-      #-----------------------------  End of BEES SYNC authentication and authorization block  ------------------------#
-      service:
-        [insert_your_service_name]:
+      middleware_api_auth_client_secret: [insert_the_client_secret_generate_on_pipeline]
+      middleware_api_vendor_id: [insert_the_vendor_id_used_on_pipeline]
+      #-----------------------------  End of MIDDLEWARE authentication and authorization block  ------------------------#
+      entities:
+        [insert_your_entity_or_service_name]:
           [insert_your_base_url]:
-            request_through_middleware_api: [if_you_are_using_middleware_insert_value_as_true_otherwise_false]
+            request_through_generic_relay: [if_you_are_using_MIDDLEWARE_insert_value_as_true_otherwise_false]
             #----------------------------------------------------------------------------------------------------------#
             #---                                    ANY API AUTH SESSION                                            ---#
             #----------------------------------------------------------------------------------------------------------#
             #---        If you are using any other service fill this authentication and authorization block         ---#
             #---        otherwise you can delete it from your config file                                           ---#
             auth_type: [insert_the_auth_type_Bearer_or_Basic]
+            auth_token: [insert_the_auth_token_param_from_response_that_you_want_use]
             auth_token: [insert_your_Basic_token] #--- Only use this field if you are using Basic authentication    ---#
             #---        and authorization                                                                           ---#
             #---        You can delete the list of fields below if you are using Basic authentication and           ---#
@@ -32,17 +35,18 @@
             auth_method: [insert_the_request_auth_method]
             auth_url: [insert_the_auth_token_url]
             auth_grant_type: client_credentials
-            auth_client_id: [insert_the_client_id]
+            auth_client_id: [insert_the_client_id_generate_on_pipeline]
             auth_scope: [insert_the_auth_scope]
-            auth_client_secret: [insert_the_client_secret]
+            auth_client_secret: [insert_the_client_secret_generate_on_pipeline]
+            vendor_id: [insert_the_vendor_id_used_on_pipeline]
             #-----------------------------  End of authentication and authorization block -----------------------------#
             traceIdPerRequest: true
             versions:
               [insert_your_api_version]:
-                #---         Only use the field url if you are using middleware service                              ---#
-                middleware_api_url: [insert_middleware_api_url]
+                #---         Only use the field url if you are using MIDDLEWARE service                              ---#
+                url: [insert_MIDDLEWARE_api_url]
                 #---         Only use the field value_stream_url if you are using any other service                 ---#
-                url: [insert_api_url]
+                value_stream_url: [insert_api_url]
                 encoding_type: utf-8
                 id_prefix: [insert_create_a_unique_identification_to_your_execution]
                 #------------------------------------------------------------------------------------------------------#
@@ -87,7 +91,7 @@
                 # Then it will replace all the information with the new data in memory (it won't edit the csv file)    #
                 #                                                                                                      #
                 #    |account_id  |name |surname |cnpj           |owner_email           |                              #
-                #    | A12467890B |Dot  |Striffe |03778130000100 |random_email@xpto.com |                              #
+                #    | A12467890B |Dot  |Striffe |03778130000100 |random_email@bees.com |                              #
                 # And finally this data will be in the new payload                                                     #
                 #
                 # To execute only the first line inside the CSV in case of a multiple_request: false or every line in  #
@@ -118,7 +122,7 @@
                 csv_scenario:  [insert_scenarios_to_be_executed] #--- Only use this field on scenario_line strategy ---#
                 #---        otherwise you can delete it from your config file                                       ---#
                 csv_data_source: [insert_data_source_path] #--- The data source name no need the extension.         ---#
-                #---         Ex:. dynamic/service_post_v2                                                           ---#
+                #---         Ex:. dynamic/BR/invoices_post_v2                                                       ---#
                 #--------------------------------  End of CSV DATA SOURCE block ---------------------------------------#
                 #------------------------------------------------------------------------------------------------------#
                 #----------------------------------- RANDOM DATA SOURCE SESSION ---------------------------------------#
@@ -138,44 +142,20 @@
                 # param_keys: "account_id:id10, cnpj:cnpj, owner_email:email"                                          #
                 #                                                                                                      #
                 #    |account_id  |cnpj           |owner_email            |                                            #
-                #    | A123ID2015 |12345678000100 |any_email@xpto.com     |                                            #
-                #    | A12467890B |03778130000100 |random_email@xpto.com  |                                            #
+                #    | A123ID2015 |12345678000100 |any_email@bees.com     |                                            #
+                #    | A12467890B |03778130000100 |random_email@bees.com  |                                            #
                 # Then it will replace all the values on the payload with the data in memory                           #
                 # You delete the field amount_data_mass if you don't want to generate random information               #
                 amount_data_mass: [insert_amount_data_mass]
                 #---------------------------------  End of RANDOM DATA SOURCE block -----------------------------------#
                 param_keys: [insert_the_parameter_list]
                 #---        If you want any values that need to be replaced globally in the template with the same  ---#
-                #---        information you can set the static params like: "proxy_id=ANY_VALEU_01"                 ---#
+                #---        information you can set the static params like: "proxy_id=ANY_VALUE_01"                 ---#
                 #---        This information will be in all the payloads that script generate                       ---#
                 static_params: [insert_static_parameter_list]
                 #---         If the api can handle with list of data in one request use true otherwise use false.   ---#
                 #---         It'll trigger multiple request by the script at once                                   ---#
                 multiple_request: [insert_true_or_false]
                 template_name: [insert_template_path] #--- The template name no need the extension.                 ---#
-                #---         Ex:. static/service_post_v2                                                           ---#
+                #---         Ex:. static/invoices_post_v2                                                           ---#
 
-
-        register:
-          get:
-            request_through_middleware_api: true
-            auth_url: none
-            auth_method: none
-            auth_grant_type: none
-            auth_client_id: none
-            auth_scope: none
-            auth_client_secret: none
-            get_data_unique_id: false
-            versions:
-              v1:
-                middlewre_api_url: /api/whatever-service/v1
-                url: /register-service/userdata?language=${language}&userName=${userName}
-                amount_data_mass: 2
-                encoding_type: utf-8
-                id_prefix: UNIT_TEST
-                param_keys: "language:language, userName:id256"
-                csv_data_source: unit_test
-                csv_strategy: single_line
-                csv_scenario: none
-                template_name: test_data
-                multiple_request: true
