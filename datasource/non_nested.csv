@@ -1,2 +1,2 @@
-"country","delivery_address","contact_type","contact_value","product_id","description","quantity
+country,delivery_address,contact_type,contact_value,product_id,description,quantity
 BR, Ocean Park Avenue 90209, PHONE,345678999,SKU-0001,Lipstick,100
