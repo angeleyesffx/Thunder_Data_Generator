@@ -16,7 +16,7 @@ from environment import get_execute_flag
 
 def response_from_auth(method, url, payload):
     message = "\nGetting Token Authentication..."
-    request_trace_id = "ThunderAuth-" + method
+    request_trace_id = "TokenAuth-" + method
     headers = {
         'requestTraceId': request_trace_id,
         'Content-Type': 'application/x-www-form-urlencoded',
