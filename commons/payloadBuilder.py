@@ -41,10 +41,10 @@ def create_standard_payload(template_name, data, multiple_request):
     return body
 
 
-def create_payload(template_name, data, service, method, version, multiple_request=False, request_through_generic_relay=False):
-    if request_through_generic_relay:
+def create_payload(template_name, data, service, method, version, multiple_request=False, request_through_middleware_api=False):
+    if request_through_middleware_api:
         payload = create_generic_relay_payload(template_name, data, multiple_request, service, version)
-    elif not request_through_generic_relay and method == "get":
+    elif not request_through_middleware_api and method == "get":
         payload = data
     else:
         payload = create_standard_payload(template_name, data, multiple_request)
