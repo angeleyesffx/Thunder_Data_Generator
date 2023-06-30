@@ -13,7 +13,7 @@ from environment import get_execute_flag, get_data_param_keys
 # ----------------------------------------- Payload Builder Functions -------------------------------------------------#
 
 
-def create_generic_relay_payload_body(json_template_name, edited_json, service, version):
+def create_middleware_apipayload_body(json_template_name, edited_json, service, version):
     if not get_execute_flag():
         payload = get_beautified_payload(json_template_name, edited_json).decode('utf8')
     else:
@@ -27,12 +27,12 @@ def create_generic_relay_payload_body(json_template_name, edited_json, service, 
     return template.render(payload_data)
 
 
-def create_generic_relay_payload(json_template_name, data, multiple_request, service, version):
+def create_middleware_apipayload(json_template_name, data, multiple_request, service, version):
     edited_json = template_editor(json_template_name, data, multiple_request)
     if multiple_request:
-        return [create_generic_relay_payload_body(json_template_name, data, service, version) for data
+        return [create_middleware_apipayload_body(json_template_name, data, service, version) for data
                 in edited_json]
-    return create_generic_relay_payload_body(json_template_name, edited_json, service, version)
+    return create_middleware_apipayload_body(json_template_name, edited_json, service, version)
 
 
 def create_standard_payload(template_name, data, multiple_request):
@@ -43,7 +43,7 @@ def create_standard_payload(template_name, data, multiple_request):
 
 def create_payload(template_name, data, service, method, version, multiple_request=False, request_through_middleware_api=False):
     if request_through_middleware_api:
-        payload = create_generic_relay_payload(template_name, data, multiple_request, service, version)
+        payload = create_middleware_apipayload(template_name, data, multiple_request, service, version)
     elif not request_through_middleware_api and method == "get":
         payload = data
     else:
