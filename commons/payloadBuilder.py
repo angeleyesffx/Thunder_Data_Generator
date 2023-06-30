@@ -18,7 +18,7 @@ def create_generic_relay_payload_body(json_template_name, edited_json, service, 
         payload = get_beautified_payload(json_template_name, edited_json).decode('utf8')
     else:
         payload = str(json.dumps(edited_json.replace('\n', '')))
-    template = get_template_from_folder(os.path.join(os.getcwd(), "templates/bodies"), "generic_relay.json")
+    template = get_template_from_folder(os.path.join(os.getcwd(), "templates/bodies"), "middleware.json")
     payload_data = {
         "service": service.upper(),
         "version": version,
