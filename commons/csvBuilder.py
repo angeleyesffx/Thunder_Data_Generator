@@ -4,8 +4,10 @@ import csv
 import pandas as pd
 import os
 import datetime
+
 from commons.utils import delete_file, create_folder
-from environment import get_csv_strategy, get_config_from_version, get_data_param_keys
+from environment import get_data_param_keys
+
 
 
 # ---------------------------------------------------------------------------------------------------------------------#
@@ -15,44 +17,65 @@ from environment import get_csv_strategy, get_config_from_version, get_data_para
 # -------------------------------------------------- CSV Functions ----------------------------------------------------#
 
 
+
+
 def normalize(payload, expand_all=False):
     df = pd.json_normalize(json.loads(payload) if type(payload) == str else payload)
     # get first column that contains lists
     col = df.applymap(type).astype(str).eq("<class 'list'>").all().idxmax()
     # explode list and expand embedded dictionaries
     df = df.explode(col).reset_index(drop=True)
-    df = df.drop(columns=[col]).join(df[col].apply(pd.Series), rsuffix=f"{col}")
-    # any lists left?
-    if expand_all and df.applymap(type).astype(str).eq("<class 'list'>").any(axis=1).all():
+    while expand_all and df.applymap(type).astype(str).eq("<class 'list'>").any(axis=1).all() or df.applymap(type).astype(str).eq("<class 'dict'>").any(axis=1).all():
         df = normalize(df.to_dict("records"))
     return df
 
 
-def write_responses_in_csv(response, data_unique_id, request_name, multiple_request, request_through_middleware_api):
+def write_responses_in_csv(response, request_name, param_keys, multiple_request, request_through_generic_relay):
     tmp_list = list()
-    folder_path = os.path.join(os.getcwd(), "request_results")
-    date_time = str(datetime.date.today())
+    # Define the folder path and current date
+    folder_path = os.path.join(os.getcwd(), "csv_generated")
+    date_time = str(datetime.date.today().fromtimestamp(datetime.datetime.now().timestamp()))
+    # Create necessary folders
     create_folder(folder_path)
     create_folder(folder_path + "/" + date_time)
-    file_path = os.path.join(os.getcwd(), folder_path + "/" + date_time, "output_data-" + request_name + ".csv")
+    # Define the file path
+    file_path = os.path.join(os.getcwd(), folder_path + "/" + date_time, f"output_data-{request_name}.csv")
     if not multiple_request:
         delete_file(file_path)
-    response_dict = json.loads(response)
     if request_through_generic_relay:
-        payload_list = json.loads(response_dict["payload"])
+        if type(response) is list:
+            for payload in response:
+                generic_response = json.loads(payload)
+                tmp_list.append(generic_response["payload"])
+            payload_list = tmp_list
+        else:
+            generic_response = json.loads(response)
+            payload_list = json.loads(generic_response["payload"])
     else:
-        payload_list = json.loads(json.dumps(response_dict))
-
+        if type(response) is list:
+            for payload in response:
+                new_payload = json.loads(payload)
+                tmp_list.append(new_payload)
+            payload_list = tmp_list
+        else:
+            payload_list = json.loads(response)
     if type(payload_list) is dict:
-        payload_list["data_unique_id"] = data_unique_id
+        for key, value in param_keys.items():
+            payload_list[key] = value
     else:
         for payload in payload_list:
-            payload["data_unique_id"] = data_unique_id
+            for key, value in param_keys.items():
+                payload[key] = value
             tmp_list.append(payload)
         payload_list = tmp_list
-    df = normalize(payload_list, expand_all=True)
-    df.to_csv(file_path, mode='a', index=False)
+    csv_writer(file_path, payload_list)
     return file_path
+
+
+def csv_writer(file_path, payload):
+    df = normalize(payload, expand_all=True)
+    df = df.set_index('requestTraceId')
+    df.to_csv(file_path, mode='a')
 
 
 
@@ -83,15 +106,15 @@ def load_csv(csv_file_path):
     return new_json
 
 
-def load_csv_and_param_keys(csv_file_path, country, service, method, version):
-    new_json = []
-    with open(csv_file_path, mode='r', encoding="utf8") as csv_file:
-        csv_reader = csv.DictReader(csv_file)
-        for row in csv_reader:
-            param_keys = get_data_param_keys(country, service, method, version)
-            row.update(param_keys)
-            new_json.append((json.dumps(row, sort_keys=True)))
-    return new_json
+def load_csv_and_param_keys(country, csv_file_path, params_keys, static_params, prefix):
+        new_json = []
+        with open(csv_file_path, mode='r', encoding="utf8") as csv_file:
+            csv_reader = csv.DictReader(csv_file)
+            for row in csv_reader:
+                param_keys = get_data_param_keys(country, params_keys, static_params, prefix)
+                row.update(param_keys)
+                new_json.append((json.dumps(row, sort_keys=True)))
+        return new_json
 
 
 def load_csv_multiple_lines(csv_file, group_key, output_list_name, list_fields):
@@ -149,7 +172,7 @@ def get_scenario_data_csv(csv_file_path, test_scenario_id):
         test_scenario_id   account_id    sku
         valid data         80589819      BBDREN0330024M
         invalid data       #$%%          BCOR!!!!!!!!!!
-        
+
     If valid data is selected in test_scenario_id, the result will be:
         [
             {'account_id': '80589819', 'sku': 'BBDREN0330024M'}
@@ -198,146 +221,17 @@ def get_each_line_data_csv(csv_file_path):
     return new_json
 
 
-def select_csv_strategy(csv_file_name, scenario, country, service, method, version):
-    strategy = get_csv_strategy(country, service, method, version)
+def select_csv_strategy(country, csv_file_name, strategy, scenario=None, params_keys=None, static_params=None, prefix=None):
     cvs_file = os.path.join(os.getcwd(), "datasource", csv_file_name + ".csv")
     if os.path.exists(cvs_file):
         if str(strategy) == "scenario_line":
             csv_data = get_scenario_data_csv(cvs_file, scenario)
         elif str(strategy) == "single_line":
             csv_data = get_each_line_data_csv(cvs_file)
-        elif str(strategy) == "multiple_lines":
-            config = get_config_from_version(country, service, method, version, 'multiple_line_config')
-            csv_data = load_csv_multiple_lines(cvs_file, **config)
         elif str(strategy) == "all_in":
             csv_data = load_csv(cvs_file)
         elif str(strategy) == "mixed_random_csv":
-            csv_data = load_csv_and_param_keys(cvs_file, country, service, method, version)
-        else:
-            csv_data = load_csv(cvs_file)
-        return csv_data
-    else:
-        raise FileNotFoundError("File does not exist in the path {0}".format(cvs_file))
-
-
-def converter_pandas_csv_json(data_path):
-    df = pd.read_csv(data_path)
-    new_json = df.to_json(orient='records')
-    return new_json
-
-
-
-def write_responses_in_csv(response, data_unique_id, request_name, multiple_request, request_through_middlewre_api):
-    file_path = os.path.join(os.getcwd(), "request_results", "output_data-"+request_name+".csv")
-    if not multiple_request:
-        delete_output_file(file_path)
-    header = set()
-    # receiving results in a dictionary
-    response_dict = json.loads(response)
-    if request_through_middlewre_api:
-        payload_list = json.loads(response_dict["payload"])
-    else:
-        payload_list = json.loads(json.dumps(response_dict))
-    if type(payload_list) is dict:
-        payload_list["data_unique_id"] = data_unique_id
-        for key in payload_list.keys():
-            header.add(key)
-        with open(file_path, 'a', newline='') as csvfile:
-            writer = csv.DictWriter(csvfile, fieldnames=header)
-            writer.writeheader()
-            for payload in payload_list:
-                writer = csv.writer(csvfile, delimiter=',')
-                writer.writerow([payload_list[key] if key in payload else "" for key in header])
-    else:
-        for payload in payload_list:
-            payload["data_unique_id"] = data_unique_id
-            for key in payload.keys():
-                header.add(key)
-        with open(file_path, 'a', newline='') as csvfile:
-            writer = csv.DictWriter(csvfile, fieldnames=header)
-            writer.writeheader()
-            for payload in payload_list:
-                writer = csv.writer(csvfile, delimiter=',')
-                writer.writerow([payload[key] if key in payload else "" for key in header])
-
-
-def delete_output_file(file_path):
-    if os.path.exists(file_path):
-        os.remove(file_path)
-
-
-def load_csv(csv_file_path):
-    new_json = []
-    with open(csv_file_path, mode='r') as csv_file:
-        csv_reader = csv.DictReader(csv_file)
-        for row in csv_reader:
-            new_json.append(json.dumps(row, sort_keys=True))
-    return new_json
-
-
-def load_csv_and_param_keys(csv_file_path, country, service, method, version):
-    new_json = []
-    with open(csv_file_path, mode='r') as csv_file:
-        csv_reader = csv.DictReader(csv_file)
-        for row in csv_reader:
-            param_keys = environment.get_param_keys(country, service, method, version)
-            row.update(param_keys)
-            new_json.append((json.dumps(row, sort_keys=True)))
-    return new_json
-
-
-def load_csv_multiple_lines(csv_file, group_key, output_list_name, list_fields):
-    result = {}
-    with open(csv_file, 'r') as fh:
-        csv_reader = csv.DictReader(fh)
-        for row in csv_reader:
-            group_key_joined = get_group_key(row, group_key)
-            if group_key_joined not in result:
-                result[group_key_joined] = row.copy()
-                result[group_key_joined][output_list_name] = []
-            result[group_key_joined][output_list_name].append({field: row[field] for field in list_fields})
-
-    return [json.dumps(data) for data in result.values()]
-
-
-def get_group_key(row, group_key):
-    return "_".join(str(row[r]) for r in row if r in group_key)
-
-
-def get_scenario_data_csv(csv_file_path, test_scenario_id):
-    new_json = []
-    with open(csv_file_path, mode='r') as csv_file:
-        csv_reader = csv.DictReader(csv_file)
-        for row in csv_reader:
-            if test_scenario_id == row["test_scenario_id"]:
-                new_json.append(json.dumps(row, sort_keys=True))
-    return new_json
-
-
-def get_each_line_data_csv(csv_file_path):
-    new_json = []
-    with open(csv_file_path, mode='r') as csv_file:
-        csv_reader = csv.DictReader(csv_file)
-        for row in csv_reader:
-            new_json.append(json.dumps(row, sort_keys=True))
-    return new_json
-
-
-def select_csv_strategy(csv_file_name, scenario, country, service, method, version):
-    strategy = get_csv_strategy(country, service, method, version)
-    cvs_file = os.path.join(os.getcwd(), "datasource", csv_file_name + ".csv")
-    if os.path.exists(cvs_file):
-        if str(strategy) == "scenario_line":
-            csv_data = get_scenario_data_csv(cvs_file, scenario)
-        elif str(strategy) == "single_line":
-            csv_data = get_each_line_data_csv(cvs_file)
-        elif str(strategy) == "multiple_lines":
-            config = get_config_from_version(country, service, method, version, 'multiple_line_config')
-            csv_data = load_csv_multiple_lines(cvs_file, **config)
-        elif str(strategy) == "all_in":
-            csv_data = load_csv(cvs_file)
-        elif str(strategy) == "mixed_random_csv":
-            csv_data = load_csv_and_param_keys(cvs_file, country, service, method, version)
+            csv_data = load_csv_and_param_keys(country, cvs_file, params_keys, static_params, prefix)
         else:
             csv_data = load_csv(cvs_file)
         return csv_data
