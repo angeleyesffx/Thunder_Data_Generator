@@ -77,6 +77,30 @@
    {% endfor %}
 {%- endmacro %}
 
+{% macro create_new_dictionary(dictionary,keys_name,template) -%}
+          {% set new_dictionary = {} %}
+          {% set list_of_dicts = [] %}
+          {% set ns = namespace(count = 0) %}
+          {% for key, value in dictionary.items() if key.startswith(keys_name[0]) %}
+             {% set ns.count = ns.count + 1 %}
+          {% endfor %}
+          {% for i in range(ns.count) %}
+              {% set new_dictionary = {} %}
+              {% for item in keys_name %}
+                  {% set k = (item|string)+(i|string) %}
+                  {% for key,value in dictionary.items() %}
+                      {% if k == (key|string) %}
+                          {% if value|length %}
+                             {% set _= new_dictionary.__setitem__(item, value) %}
+                          {% endif %}
+                     {% endif %}
+                  {% endfor %}
+              {% endfor %}
+              {% if new_dictionary|length %}
+                  {{ list_of_dicts.append(new_dictionary) or "" }}
+              {% endif %}
+         {% endfor %}
+{%- endmacro %}
 
 {% macro string_to_array(dictionary) -%}
     {% for key,value in dictionary.items() %}
@@ -100,7 +124,25 @@
 {%- endmacro %}
 
 
-{% macro create_list_of_dicts(dictionary,new_dictionary,keys_name,rm_preffix_from_keys) -%}
+
+{% macro string_to_object_array(field_name, object_fields, values) -%}
+    {% if object_fields|length and values|length %}
+        "{{field_name}}" : [
+            {% for k in object_fields %}
+               {% for v in values %}
+                {
+                  "{{k}}" : {{v}}
+                }{% if loop.last %}{% else %}, {% endif %}
+                {% endfor %}
+            {% endfor %}
+        ]
+    {% endif %}
+{%- endmacro %}
+
+{% macro teste(keys_name, body) %}
+[
+{% for dictionary in dict_list -%}
+    {% set new_dictionary = {} %}
     {% set list_of_dicts = [] %}
     {% set ns = namespace(count = 0) %}
     {% for key, value in dictionary.items() if key.startswith(keys_name[0]) %}
@@ -121,19 +163,8 @@
         {% if new_dictionary|length %}
             {{ list_of_dicts.append(new_dictionary) or "" }}
         {% endif %}
-   {% endfor %}
-{%- endmacro %}
-
-{% macro string_to_object_array(field_name, object_fields, values) -%}
-    {% if object_fields|length and values|length %}
-        "{{field_name}}" : [
-            {% for k in object_fields %}
-               {% for v in values %}
-                {
-                  "{{k}}" : {{v}}
-                }{% if loop.last %}{% else %}, {% endif %}
-                {% endfor %}
-            {% endfor %}
-        ]
-    {% endif %}
+    {% include body %}
+    {% endfor %}
+{% endfor %}
+]
 {%- endmacro %}
