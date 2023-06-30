@@ -12,8 +12,15 @@ def create_folder(folder_path):
 
 
 def delete_file(file_path):
-    if os.path.exists(file_path):
+    if file_exists(file_path):
         os.remove(file_path)
+
+
+def file_exists(file_path):
+    if os.path.exists(file_path):
+        return True
+    else:
+        return False
 
 
 def random_data_generator(param_dict, language, prefix):
