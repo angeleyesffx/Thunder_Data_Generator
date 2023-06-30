@@ -1,2 +1,2 @@
 "country","account_id","customer_name","customer_phone","customer_email","status","delivery_ids"
-"BR",1234567890,"Angelina Jolie","+1 555-64798",angelina_j01@hotmail.com","Active","D-ID001,D-ID002,D-ID003"
+'BR',1234567890,'Angelina Jolie','+1 555-64798',angelina_j01@hotmail.com",'Active','D-ID001,D-ID002,D-ID003'
