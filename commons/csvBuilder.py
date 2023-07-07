@@ -4,6 +4,7 @@ import csv
 import pandas as pd
 import os
 import datetime
+import contextlib
 
 from commons.utils import delete_file, create_folder
 from environment import get_data_param_keys
@@ -30,7 +31,7 @@ def normalize(payload, expand_all=False):
     return df
 
 
-def write_responses_in_csv(response, request_name, param_keys, multiple_request, request_through_middleware_api):
+def write_responses_in_csv(response, request_name, param_keys, multiple_request, request_through_generic_relay):
     tmp_list = list()
     # Define the folder path and current date
     folder_path = os.path.join(os.getcwd(), "csv_generated")
@@ -42,7 +43,7 @@ def write_responses_in_csv(response, request_name, param_keys, multiple_request,
     file_path = os.path.join(os.getcwd(), folder_path + "/" + date_time, f"output_data-{request_name}.csv")
     if not multiple_request:
         delete_file(file_path)
-    if request_through_middleware_api:
+    if request_through_generic_relay:
         if type(response) is list:
             for payload in response:
                 generic_response = json.loads(payload)
@@ -99,7 +100,7 @@ def load_csv(csv_file_path):
     :return:
     """
     new_json = []
-    with open(csv_file_path, mode='r', encoding="utf8") as csv_file:
+    with contextlib.closing(open(csv_file_path, mode='r', encoding="utf8")) as csv_file:
         csv_reader = csv.DictReader(csv_file)
         for row in csv_reader:
             new_json.append(json.dumps(row, sort_keys=True))
@@ -108,7 +109,7 @@ def load_csv(csv_file_path):
 
 def load_csv_and_param_keys(country, csv_file_path, params_keys, static_params, prefix):
         new_json = []
-        with open(csv_file_path, mode='r', encoding="utf8") as csv_file:
+        with contextlib.closing(open(csv_file_path, mode='r', encoding="utf8")) as csv_file:
             csv_reader = csv.DictReader(csv_file)
             for row in csv_reader:
                 param_keys = get_data_param_keys(country, params_keys, static_params, prefix)
@@ -149,7 +150,7 @@ def load_csv_multiple_lines(csv_file, group_key, output_list_name, list_fields):
     :return:
     """
     result = {}
-    with open(csv_file, 'r', encoding="utf8") as fh:
+    with contextlib.closing(open(csv_file, 'r', encoding="utf8")) as fh:
         csv_reader = csv.DictReader(fh)
         for row in csv_reader:
             group_key_joined = get_group_key(row, group_key)
@@ -186,7 +187,7 @@ def get_scenario_data_csv(csv_file_path, test_scenario_id):
     :return:
     """
     new_json = []
-    with open(csv_file_path, mode='r', encoding="utf8") as csv_file:
+    with contextlib.closing(open(csv_file_path, mode='r', encoding="utf8")) as csv_file:
         csv_reader = csv.DictReader(csv_file)
         for row in csv_reader:
             if test_scenario_id == row["test_scenario_id"]:
@@ -214,7 +215,7 @@ def get_each_line_data_csv(csv_file_path):
     :return:
     """
     new_json = []
-    with open(csv_file_path, mode='r', encoding="utf8") as csv_file:
+    with contextlib.closing(open(csv_file_path, mode='r', encoding="utf8")) as csv_file:
         csv_reader = csv.DictReader(csv_file)
         for row in csv_reader:
             new_json.append(json.dumps(row, sort_keys=True))
