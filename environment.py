@@ -5,7 +5,7 @@ import argparse
 import random
 import sys
 
-from commons.utils import random_data_generator
+from commons.randomGenerator import create_param_dict, random_data_generator
 
 
 class Config(object):
@@ -430,14 +430,6 @@ def create_static_params_dict(static_params):
                                          for element in static_params.split(',')))
         return result
 
-
-def create_param_dict(params):
-    # using strip() and split()  methods
-    if params != 'None' and params != 'none' and params != '' and params is not None:
-        result = dict((key.strip(), value.strip())
-                      for key, value in (element.split(':')
-                                         for element in params.split(',')))
-        return result
 
 
 def get_data_param_keys(country, params, static_params=None, prefix=None):
