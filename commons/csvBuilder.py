@@ -1,4 +1,3 @@
-import ast
 import json
 import csv
 import pandas as pd
@@ -29,6 +28,7 @@ def normalize(payload, expand_all=False):
     while expand_all and df.applymap(type).astype(str).eq("<class 'list'>").any(axis=1).all() or df.applymap(type).astype(str).eq("<class 'dict'>").any(axis=1).all():
         df = normalize(df.to_dict("records"))
     return df
+
 
 
 def write_responses_in_csv(response, request_name, param_keys, multiple_request, request_through_generic_relay):
@@ -75,8 +75,8 @@ def write_responses_in_csv(response, request_name, param_keys, multiple_request,
 
 def csv_writer(file_path, payload):
     df = normalize(payload, expand_all=True)
-    df = df.set_index('requestTraceId')
-    df.to_csv(file_path, mode='a')
+    df = df.set_index("requestTraceId")
+    df.to_csv(file_path, mode='a', header=not os.path.exists(file_path))
 
 
 
