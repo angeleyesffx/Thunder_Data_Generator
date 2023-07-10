@@ -8,7 +8,7 @@ import zlib
 import requests
 from string import Template
 from functools import reduce
-
+import concurrent.futures
 from commons.jsonDataBuilder import write_json_file
 from commons.csvDataBuilder import write_responses_in_csv
 from environment import get_execute_flag
@@ -16,7 +16,7 @@ from environment import get_execute_flag
 
 def response_from_auth(method, url, payload):
     message = "\nGetting Token Authentication..."
-    request_trace_id = "TokenAuth-" + method
+    request_trace_id = "ThunderAuth-" + method
     headers = {
         'requestTraceId': request_trace_id,
         'Content-Type': 'application/x-www-form-urlencoded',
@@ -101,13 +101,35 @@ def zip_payload(payload: str) -> bytes:
     return file.getvalue()
 
 
-def send_request(request_name, method, url, headers, payload, data, multiple_request=False, request_through_middleware_api=False,
-                 zip_payload_needed=None):
+def send_requests_in_parallel(request_name, method, url, data, payload, headers, chunk_size=10, max_workers=None):
+    request_list = [(method, url, data, headers, p, request_name, idx, e, []) for idx, (e, p) in
+                    enumerate(zip(payload, data))]
+    # divide the requests into chunks
+    chunks = [request_list[i:i + chunk_size] for i in range(0, len(request_list), chunk_size)]
+
+    responses = []
+    # create a thread pool to process the chunks
+    with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+        for chunk in chunks:
+            # submit the requests for each chunk
+            future_to_request = {executor.submit(exec_request, *req): req for req in chunk}
+            # iterate over the completed futures
+            for future in concurrent.futures.as_completed(future_to_request):
+                try:
+                    response = future.result()
+                    responses.append(response)
+                except Exception as e:
+                    print(f'Error during request: {e}')
+    return responses
+
+
+def send_request(request_name, method, url, headers, payload, data, multiple_request=False, request_through_middleware_api=False, zip_payload_needed=None):
     if multiple_request and type(payload) is list:
         payload = [zip_payload(body) if zip_payload_needed else body for body in payload]
     else:
         headers = reduce(lambda a, b: dict(a, **b), headers)
         payload = zip_payload(payload) if zip_payload_needed else payload
+
     if not get_execute_flag():
         print_request_and_exit(request_name, method, url, headers, payload, zip_payload_needed)
     else:
@@ -115,41 +137,53 @@ def send_request(request_name, method, url, headers, payload, data, multiple_req
         evaluate_response(payload, response, request_name, multiple_request, request_through_middleware_api)
         return response
 
+def exec_request(*args):
+    method, url, data, headers, payload, request_name, idx, element, response = args
+    params = dict()
+    if type(headers) is list:
+        new_headers = headers[idx]
+        url_list = Template(url).substitute(data[idx]).format(data[idx].get("user_id"))
+    else:
+        new_headers = headers
+        url_list = Template(url).substitute(data[0])
+    params['requestTraceId'] = f"{new_headers['requestTraceId']}_part_{idx + 1}_of_{len(data)}"
+    new_headers['requestTraceId'] = f"{new_headers['requestTraceId']}_part_{idx + 1}_of_{len(data)}"
+    new_headers['x-timestamp'] = str(calendar.timegm(time.gmtime()))
+    res = requests.request(method, url_list, data=element, headers=new_headers)
+    os.system('clear')
+    print("Sending RequestTraceId: " + new_headers['requestTraceId'])
+    write_responses_in_csv(element, request_name, params, True, False)
+    return res
 
 def select_request(request_name, method, url, data, payload, headers, multiple_request=False):
     # This method is responsible for create only one body for method
     if method == "post":
         if multiple_request:
-            response = get_multiple_requests(method, url, data, headers, payload, request_name)
+            response = send_requests_in_parallel(request_name, method, url, data, payload, headers)
         else:
             response = requests.post(url, data=payload, headers=headers, verify=False)
         return response
     elif method == "put":
         if multiple_request:
-            response = get_multiple_requests(method, url, data, headers, payload, request_name)
+            response = send_requests_in_parallel(request_name, method, url, data, payload, headers)
         else:
             response = requests.put(url, data=payload, headers=headers, verify=False)
         return response
     elif method == "delete":
         if multiple_request:
-            response = get_multiple_requests(method, url, data, headers, payload, request_name)
+            response = send_requests_in_parallel(request_name, method, url, data, payload, headers)
         else:
             response = requests.delete(url, data=payload, headers=headers, verify=False)
         return response
     elif method == "patch":
         if multiple_request:
-            response = get_multiple_requests(method, url, data, headers, payload, request_name)
+            response = send_requests_in_parallel(request_name, method, url, data, payload, headers)
         else:
             response = requests.patch(url, data=payload, headers=headers, verify=False)
         return response
     elif method == "get":
         all_responses = []
         for p in payload:
-            try:
-                del p['test_scenario_id']
-            except KeyError:
-                pass
-            url = Template(url).substitute(p)
             response = requests.get(url, headers=headers, params=p, verify=False)
             all_responses.append(response)
         return all_responses
@@ -158,26 +192,7 @@ def select_request(request_name, method, url, data, payload, headers, multiple_r
         return None  # 0 is the default case if method is not found
 
 
-def get_multiple_requests(method, url, data, headers, payload, request_name):
-    response = list()
-    # for d in data:
-    # url_list.append(str(url.format(d.get("user_id"))))
-    for idx, e in enumerate(payload):
-        if type(headers) is list:
-            new_headers = headers[idx]
-            url_list = Template(url).substitute(data[idx]).format(data[idx].get("user_id"))
-        else:
-            new_headers = headers
-            url_list = Template(url).substitute(data[0])
-        new_headers['requestTraceId'] = f"{new_headers['requestTraceId']}_part_{idx + 1}_of_{len(payload)}"
-        new_headers['x-timestamp'] = str(calendar.timegm(time.gmtime()))
-        response.append(requests.request(method, url_list, data=e, headers=new_headers))
-        os.system('clear')
-        print("Sending RequestTraceId: " + new_headers['requestTraceId'])
-    return response
-
-
-def evaluate_response(payload, responses, request_name, multiple_request=False, request_through_middleware_api=False):
+def evaluate_response(payload, responses, request_name, multiple_request, request_through_middleware_api):
     if type(responses) == list:
         for idx, response in enumerate(responses):
             print_result(payload[idx], response, request_name, multiple_request, request_through_middleware_api)
@@ -320,7 +335,8 @@ def print_result(payload, response, request_name, multiple_request, request_thro
             print("REQUEST: ", ''.join(payload.decode("utf-8").split()).replace('\n', '').replace(' ', ''))
         print("\n")
         params['requestTraceId'] = response.request.headers.get('requestTraceId')
-        write_responses_in_csv(payload, request_name, params, multiple_request, request_through_middleware_api)
+        if not multiple_request:
+            write_responses_in_csv(payload, request_name, params, multiple_request, request_through_middleware_api)
         print("Check the report with the requestTraceId in request_results folder")
     else:
         data = response
