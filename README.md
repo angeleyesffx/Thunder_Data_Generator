@@ -1,18 +1,19 @@
-# Dynamic_Sender
-**Install Python**
+# Thunder_Data_Generator
+# Install Python
 
 **IMPORTANT ---->>>>  This script needs Python 3.8 or above**
 
-***Step 1:*** Download and Install the latest version of Python on the official site: https://www.python.org/downloads/
+### Step 1:
+Download and Install the latest version of Python on the official site: https://www.python.org/downloads/
         
 You can find Installation Guide to your system here:  https://realpython.com/installing-python/
 
 
-***Step 2:*** Install or Update pip
+### Step 2: Install or Update pip
         
 You can find Installation Guide to your system here:  https://pypi.org/project/pip/
 
-***Step 3:*** Create a virtual environment
+### Step 3: Create a virtual environment
 
 Inside Script folder, follow the steps described at:
 
@@ -22,7 +23,7 @@ Then activate the virtual environment by running the command:
 
 * `source env/bin/activate`
 
-***Step 4:*** Install all dependencies listed on requirements.txt inside your project
+### Step 4: Install all dependencies listed on requirements.txt inside your project
         Execute the command line:
         
 * `pip install -r requirements.txt` 
@@ -33,18 +34,27 @@ You can find information more information about command line here: https://docs.
 
 **IMPORTANT ---->>>> If you install python3 instead python using in command line python3:**
 
+# Token environment variables
+The script `token_vars_sample.sh` is a sample of the token secrets used. Copy this file and update with your credentials
+```bash
+cp token_vars_sample.sh token_vars.sh 
+```
+After the file `token_vars.sh` is updated you need to load the variables when open a new terminal with the command.
+```bash
+source token_vars.sh
+```
 
-**How to execute the script through the terminal?** 
+## How to execute the script through the terminal? 
 
-**IMPORTANT ---->>>>  If you're not sure that Dynamic Sender is building your requests correctly, check the information using Debug Mode. After corrected/verified run the application again, adding -e to your command line**
+**IMPORTANT ---->>>>  If you're not sure that ThunderData is building your requests correctly, check the information using Debug Mode. After corrected/verified run the application again, adding -e to your command line**
 
 
-**Dynamic Sender has two distinct execution mode: Debug Mode and Execution Mode.**
+**ThunderData has two distinct execution mode: Debug Mode and Execution Mode.**
 
 
 **DEBUG MODE:**
 
-Debug Mode is the default mode execution used to verify if the data is building correctly by Dynamic Sender, during Debug Mode execution no request will be sent through the application. 
+Debug Mode is the default mode execution used to verify if the data is building correctly by ThunderData, during Debug Mode execution no request will be sent through the application. 
 
  On terminal, you can run the command line changing the variables as you wish and removing the -e instruction: 
 
@@ -62,13 +72,13 @@ This project was design to support some flexible parameters using environment va
 * `python3 main.py -CONFIG_YAML=(yaml_file_name) -FLOW=(execution_flow_name) -ENV= (environment) -COUNTRIES= (countries) -SERVICES= (services) -METHODS= (methods) -VERSIONS= (versions) -e` 
  
 
-If you want to change the default list of countries what Dynamic Sender will use in execution, to a specific list of countries, you can define it through the command line, using the environment variable “COUNTRIES”. Given the list, split by comma, the execution will proceed only by the countries that you defined.  
+If you want to change the default list of countries what Thunder Data will use in execution, to a specific list of countries, you can define it through the command line, using the environment variable “COUNTRIES”. Given the list, split by comma, the execution will proceed only by the countries that you defined.  
 
-If you want to change the default list of entities what Dynamic Sender will use in execution, to a specific list of entities, you can define it through the command line, using the environment variable “ENTITIES”. Given the list, split by comma, the execution will proceed only by the entities that you defined.  
+If you want to change the default list of SERVICES what Thunder Data will use in execution, to a specific list of SERVICES, you can define it through the command line, using the environment variable “SERVICES”. Given the list, split by comma, the execution will proceed only by the SERVICES that you defined.  
 
-If you want to change the default list of methods what Dynamic Sender will use in execution, to a specific list of methods, you can define it through the command line, using the environment variable “METHODS”. Given the list, split by comma, the execution will proceed only by the methods that you defined. 
+If you want to change the default list of methods what Thunder Data will use in execution, to a specific list of methods, you can define it through the command line, using the environment variable “METHODS”. Given the list, split by comma, the execution will proceed only by the methods that you defined. 
 
-If you want to change the default list of versions what Dynamic Sender will use in execution, to a specific list of versions, you can define it through the command line, using the environment variable “VERSIONS”. Given the list, split by comma, the execution will proceed only by the versions that you defined. 
+If you want to change the default list of versions what Thunder Data will use in execution, to a specific list of versions, you can define it through the command line, using the environment variable “VERSIONS”. Given the list, split by comma, the execution will proceed only by the versions that you defined. 
 
 If you don’t know the order of flow you need, or you don’t know what microservices you need to call, you can choose one of the default flows that Thunder Data will use in execution. You can define it through the command line, using the environment variable “FLOW”.  
 
@@ -88,6 +98,7 @@ If you want to run a specific flow:
 Or if you want to run everything using the default configuration:
 * `python3 main.py -e`
  
+
 
 
 
