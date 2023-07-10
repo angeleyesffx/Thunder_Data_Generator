@@ -1,6 +1,6 @@
-#---------------------------------------------------------------------------------------------------------------------#
-#---                                           EXPLICIT SENSITIVE SETTINGS                                         ---#
-#---------------------------------------------------------------------------------------------------------------------#
+#----------------------------------------------------------------------------------------------------------------------#
+#---                                           EXPLICIT SENSITIVE SETTINGS                                          ---#
+#----------------------------------------------------------------------------------------------------------------------#
 [insert_your_environment]:
   base_url: [insert_your_base_url]
   countries:
@@ -19,7 +19,7 @@
       middleware_api_auth_scope: [insert_the_auth_scope]
       middleware_api_auth_client_secret: [insert_the_client_secret_generate_on_pipeline]
       middleware_api_vendor_id: [insert_the_vendor_id_used_on_pipeline]
-      #-----------------------------  End of MIDDLEWARE authentication and authorization block  ------------------------#
+      #-----------------------------  End of MIDDLEWARE authentication and authorization block  -----------------------#
       entities:
         [insert_your_entity_or_service_name]:
           [insert_your_base_url]:
@@ -46,7 +46,7 @@
             traceIdPerRequest: true
             versions:
               [insert_your_api_version]:
-                #---         Only use the field url if you are using MIDDLEWARE service                              ---#
+                #---         Only use the field url if you are using MIDDLEWARE service                             ---#
                 url: [insert_MIDDLEWARE_api_url]
                 #---         Only use the field value_stream_url if you are using any other service                 ---#
                 value_stream_url: [insert_api_url]
@@ -165,9 +165,9 @@
 
 
                 
-#---------------------------------------------------------------------------------------------------------------------------#
-#---                                            SUPRESSED SENSITIVE SETTINGS                                             ---#
-#---------------------------------------------------------------------------------------------------------------------------#                
+#----------------------------------------------------------------------------------------------------------------------#
+#---                                            SUPPRESSED SENSITIVE SETTINGS                                       ---#
+#----------------------------------------------------------------------------------------------------------------------#                
 
 base_configs:
   token_uat: &uat_token_info
@@ -195,7 +195,7 @@ base_configs:
       #---             otherwise you can delete it from your config file                                            ---#
       <<: *default_request_config
       <<: *uat_token_info
-      #-----------------------------  End of MIDDLEWARE authentication and authorization block  ------------------------#
+      #-----------------------------  End of MIDDLEWARE authentication and authorization block  -----------------------#
       entities:
         [insert_your_entity_or_service_name]:
           [insert_your_base_url]:
@@ -205,7 +205,7 @@ base_configs:
             #-----------------------------  End of authentication and authorization block -----------------------------#
             versions:
               [insert_your_api_version]:
-                #---         Only use the field url if you are using MIDDLEWARE service                              ---#
+                #---         Only use the field url if you are using MIDDLEWARE service                             ---#
                 url: [insert_MIDDLEWARE_api_url]
                 #---         Only use the field value_stream_url if you are using any other service                 ---#
                 value_stream_url: [insert_api_url]
