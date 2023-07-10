@@ -1,11 +1,14 @@
+#---------------------------------------------------------------------------------------------------------------------#
+#---                                           EXPLICIT SENSITIVE SETTINGS                                         ---#
+#---------------------------------------------------------------------------------------------------------------------#
 [insert_your_environment]:
   base_url: [insert_your_base_url]
   countries:
     [insert_your_country]:
       #----------------------------------------------------------------------------------------------------------------#
-      #---                                      MIDDLEWARE AUTH SESSION                                              ---#
+      #---                                      MIDDLEWARE AUTH SESSION                                             ---#
       #----------------------------------------------------------------------------------------------------------------#
-      #---             If you are using MIDDLEWARE fill this authentication and authorization block                  ---#
+      #---             If you are using MIDDLEWARE fill this authentication and authorization block                 ---#
       #---             otherwise you can delete it from your config file                                            ---#
       middleware_api_auth_type: [insert_the_auth_type_Bearer_or_Basic]
       middleware_api_auth_token: [insert_the_auth_token_param_from_response_that_you_want_use]
@@ -158,4 +161,163 @@
                 multiple_request: [insert_true_or_false]
                 template_name: [insert_template_path] #--- The template name no need the extension.                 ---#
                 #---         Ex:. static/invoices_post_v2                                                           ---#
+
+
+
+                
+#---------------------------------------------------------------------------------------------------------------------------#
+#---                                            SUPRESSED SENSITIVE SETTINGS                                             ---#
+#---------------------------------------------------------------------------------------------------------------------------#                
+
+base_configs:
+  token_uat: &uat_token_info
+    auth_type: !ENV ${THUNDER_AUTH_TYPE}
+    auth_token: !ENV ${THUNDER_AUTH_TOKEN}
+    auth_url: !ENV ${THUNDER_AUTH_URL}
+    auth_grant_type: !ENV ${THUNDER_AUTH_GRANT_TYPE}
+    auth_client_id: !ENV ${THUNDER_AUTH_CLIENT_ID}
+    auth_scope: !ENV ${THUNDER_AUTH_SCOPE}
+    auth_client_secret: !ENV ${THUNDER_AUTH_CLIENT_SECRET}
+    auth_vendor_id: !ENV ${THUNDER_AUTH_VENDOR_ID}
+  default_request_configs: &default_request_config
+    request_through_generic_relay: false
+    auth_method: post
+    traceIdPerRequest: true
+
+[insert_your_environment]:
+  base_url: [insert_your_base_url]
+  countries:
+    [insert_your_country]:
+      #----------------------------------------------------------------------------------------------------------------#
+      #---                                      MIDDLEWARE AUTH SESSION                                             ---#
+      #----------------------------------------------------------------------------------------------------------------#
+      #---             If you are using MIDDLEWARE fill this authentication and authorization block                 ---#
+      #---             otherwise you can delete it from your config file                                            ---#
+      <<: *default_request_config
+      <<: *uat_token_info
+      #-----------------------------  End of MIDDLEWARE authentication and authorization block  ------------------------#
+      entities:
+        [insert_your_entity_or_service_name]:
+          [insert_your_base_url]:
+            request_through_generic_relay: [if_you_are_using_MIDDLEWARE_insert_value_as_true_otherwise_false]
+            <<: *default_request_config
+            <<: *uat_token_info
+            #-----------------------------  End of authentication and authorization block -----------------------------#
+            versions:
+              [insert_your_api_version]:
+                #---         Only use the field url if you are using MIDDLEWARE service                              ---#
+                url: [insert_MIDDLEWARE_api_url]
+                #---         Only use the field value_stream_url if you are using any other service                 ---#
+                value_stream_url: [insert_api_url]
+                encoding_type: utf-8
+                id_prefix: [insert_create_a_unique_identification_to_your_execution]
+                #------------------------------------------------------------------------------------------------------#
+                #------------------------------------   CSV DATA SOURCE SESSION ---------------------------------------#
+                #------------------------------------------------------------------------------------------------------#
+                #---                                 CSV DataSource Rules                                           ---#
+                #------------------------------------------------------------------------------------------------------#
+                #------------------------------------------------------------------------------------------------------#
+                #---         If you have a specific source of data mass that you want use, this session needs to be ---#
+                #---         filled properly to handle it.                                                          ---#
+                #------------------------------------------------------------------------------------------------------#
+                #---                                 CSV DataSource Rules                                           ---#
+                #------------------------------------------------------------------------------------------------------#
+                #---         There are three most important fields to CSV Data Source logic works fine:             ---#
+                #---         csv_strategy, multiple_request and param_keys                                          ---#
+                #------------------------------------------------------------------------------------------------------#
+                #---                                   CSV Strategies                                               ---#
+                #------------------------------------------------------------------------------------------------------#
+                #---                                  All In Strategy                                               ---#
+                #------------------------------------------------------------------------------------------------------#
+                # To execute all the lines inside the CSV in the request, for api that handle with list of data use    #
+                # multiple_request: false or multiple_request: true if it doesn't handle with list.                    #
+                # EX:.                                                                                                 #
+                # csv_strategy: all_in                                                                                 #
+                # multiple_request: true                                                                               #
+                #------------------------------------------------------------------------------------------------------#
+                #---                                 Mixed Random CSV Strategy                                      ---#
+                #------------------------------------------------------------------------------------------------------#
+                # This is most popular strategy, it permits to combine random data and csv data at the same time       #
+                # to this strategy works, the script has a functionality on commons/utils.py that recognize certain    #
+                # types of data, to trigger this function you need to set a list of params on the field param_keys.    #
+                # EX:.                                                                                                 #
+                # param_keys: "account_id:id10, cnpj:cnpj, owner_email:email"                                          #
+                # On the example above the parameter "account_id" will be replaced by a random "id10", the script will #
+                # generate a new id with 10 digits, and it will generate a new cnpj for the cnpj and a new email       #
+                # for the owner_email as well.                                                                         #
+                # The script will load the data source like the example below:                                         #
+                #                                                                                                      #
+                #    |account_id |name |surname |cnpj           |owner_email           |                               #
+                #    | ANY_ID_01 |Dot  |Striffe |12345678000100 |any_email@any.com     |                               #
+                #                                                                                                      #
+                # Then it will replace all the information with the new data in memory (it won't edit the csv file)    #
+                #                                                                                                      #
+                #    |account_id  |name |surname |cnpj           |owner_email           |                              #
+                #    | A12467890B |Dot  |Striffe |03778130000100 |random_email@bees.com |                              #
+                # And finally this data will be in the new payload                                                     #
+                #
+                # To execute only the first line inside the CSV in case of a multiple_request: false or every line in  #
+                # case multiple_request: true, use single line strategy                                                #
+                # EX:.                                                                                                 #
+                # csv_strategy: mixed_random_csv                                                                       #
+                # multiple_request: true                                                                               #
+                #------------------------------------------------------------------------------------------------------#
+                #---                                Scenario Line Strategy                                          ---#
+                #------------------------------------------------------------------------------------------------------#
+                # To execute only a specific collection of scenarios design inside of CSV, use scenario_line           #
+                # This strategy search a column inside the csv named as test_scenario_id, where you can define an ID,  #
+                # when this is strategy is selected, the script only execute the list of ID you define on the field    #
+                # csv_scenario.                                                                                        #
+                # EX:.                                                                                                 #
+                # csv_strategy: scenario_line                                                                          #
+                # csv_scenario: "valid_data, empty_data, invalid_data"                                                 #
+                #------------------------------------------------------------------------------------------------------#
+                #---                                 Single Line Strategy                                           ---#
+                #------------------------------------------------------------------------------------------------------#
+                # To execute only the first line inside the CSV in case of a multiple_request: false or every line in  #
+                # case multiple_request: true, use single line strategy                                                #
+                # EX:.                                                                                                 #
+                # csv_strategy: single_line                                                                            #
+                # multiple_request: true                                                                               #
+                #------------------------------------------------------------------------------------------------------#
+                csv_strategy: none
+                csv_scenario:  [insert_scenarios_to_be_executed] #--- Only use this field on scenario_line strategy ---#
+                #---        otherwise you can delete it from your config file                                       ---#
+                csv_data_source: [insert_data_source_path] #--- The data source name no need the extension.         ---#
+                #---         Ex:. dynamic/BR/invoices_post_v2                                                       ---#
+                #--------------------------------  End of CSV DATA SOURCE block ---------------------------------------#
+                #------------------------------------------------------------------------------------------------------#
+                #----------------------------------- RANDOM DATA SOURCE SESSION ---------------------------------------#
+                #------------------------------------------------------------------------------------------------------#
+                #------------------------------------------------------------------------------------------------------#
+                #---         If you just need a high number of payloads with no specific source of data mass you    ---#
+                #---         can combine the fields amount_data_mass and param_keys                                 ---#
+                # The script has a functionality on commons/utils.py that recognize certain types of data, to trigger  #
+                # this function you need to set a list of params on the field param_keys.                              #
+                # EX:.                                                                                                 #
+                # param_keys: "account_id:id10, cnpj:cnpj, owner_email:email"                                          #
+                # On the example above the parameter a "CSV" will be generated an "account_id" with 10 digits also     #
+                # it will generate a cnpj and an owner_email                                                           #
+                # The quantity of random information that will be generated will set up on amount_data_mass field      #
+                # EX:.                                                                                                 #
+                # amount_data_mass: 2                                                                                  #
+                # param_keys: "account_id:id10, cnpj:cnpj, owner_email:email"                                          #
+                #                                                                                                      #
+                #    |account_id  |cnpj           |owner_email            |                                            #
+                #    | A123ID2015 |12345678000100 |any_email@bees.com     |                                            #
+                #    | A12467890B |03778130000100 |random_email@bees.com  |                                            #
+                # Then it will replace all the values on the payload with the data in memory                           #
+                # You delete the field amount_data_mass if you don't want to generate random information               #
+                amount_data_mass: [insert_amount_data_mass]
+                #---------------------------------  End of RANDOM DATA SOURCE block -----------------------------------#
+                param_keys: [insert_the_parameter_list]
+                #---        If you want any values that need to be replaced globally in the template with the same  ---#
+                #---        information you can set the static params like: "proxy_id=ANY_VALUE_01"                 ---#
+                #---        This information will be in all the payloads that script generate                       ---#
+                static_params: [insert_static_parameter_list]
+                #---         If the api can handle with list of data in one request use true otherwise use false.   ---#
+                #---         It'll trigger multiple request by the script at once                                   ---#
+                multiple_request: [insert_true_or_false]
+                template_name: [insert_template_path] #--- The template name no need the extension.                 ---#
+                #---         Ex:. static/invoices_post_v2                                                           ---#                
 
